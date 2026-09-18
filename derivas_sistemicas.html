@@ -28,53 +28,113 @@
   header h1 { font-size: 1.4rem; color: var(--border); text-shadow: 0 0 12px rgba(0,255,255,0.5); margin-bottom: 4px; }
   header p { color: var(--muted); font-size: 0.8rem; }
 
-  .layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; max-width: 1300px; margin: 0 auto; }
-  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+  .layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; max-width: 1400px; margin: 0 auto; }
+  @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } }
+
+  .left-col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 
   .scene {
     perspective: 1200px;
-    height: 460px;
+    height: 400px;
     display: flex; align-items: center; justify-content: center;
     background: rgba(0,0,0,0.3);
     border-radius: 12px;
     border: 1px solid rgba(0,255,255,0.2);
     overflow: hidden;
+    position: relative;
   }
   .cube {
-    width: 220px; height: 220px;
+    width: 200px; height: 200px;
     position: relative;
     transform-style: preserve-3d;
-    transition: transform 0.25s ease-out;
+    transition: transform 0.6s ease-out;
   }
   .face {
     position: absolute;
-    width: 220px; height: 220px;
+    width: 200px; height: 200px;
     background: rgba(10, 15, 30, 0.95);
     border: 2px solid;
     display: flex; flex-direction: column;
-    padding: 10px;
-    font-size: 11px;
+    padding: 8px;
+    font-size: 10px;
     overflow: hidden;
     backface-visibility: hidden;
   }
   .face-title {
-    font-weight: bold; font-size: 12px; text-align: center;
+    font-weight: bold; font-size: 11px; text-align: center;
+    padding-bottom: 3px; border-bottom: 1px solid currentColor;
+    margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;
+  }
+  .face-big {
+    font-size: 22px; font-weight: bold; text-align: center;
+    margin: 4px 0; font-variant-numeric: tabular-nums;
+  }
+  .face-row { display: flex; justify-content: space-between; font-size: 9px; padding: 1px 0; color: #b0c8e0; }
+  .face-row span:last-child { color: #fff; font-weight: bold; }
+
+  .f-gaia  { transform: translateZ(100px); }
+  .f-eco   { transform: rotateY(90deg) translateZ(100px); }
+  .f-capt  { transform: rotateY(180deg) translateZ(100px); }
+  .f-subj  { transform: rotateY(-90deg) translateZ(100px); }
+  .f-coh   { transform: rotateX(90deg) translateZ(100px); }
+  .f-alert { transform: rotateX(-90deg) translateZ(100px); }
+
+  /* NUEVO: barra de botones de snap */
+  .snap-bar {
+    position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 6px; background: rgba(0,0,0,0.6);
+    padding: 6px 10px; border-radius: 20px;
+    border: 1px solid rgba(0,255,255,0.3);
+    z-index: 10;
+  }
+  .snap-btn {
+    background: transparent; color: var(--border);
+    border: 1px solid rgba(0,255,255,0.4);
+    padding: 4px 10px; border-radius: 12px;
+    font-family: inherit; font-size: 0.65rem; font-weight: bold;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .snap-btn:hover { background: rgba(0,255,255,0.2); }
+  .snap-btn.active { background: var(--border); color: #000; }
+
+  /* NUEVO: panel de tarjetas siempre visible */
+  .cards-panel {
+    background: var(--panel);
+    border: 1px solid rgba(0,255,255,0.3);
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .cards-panel h2 {
+    color: var(--border); font-size: 0.8rem; margin-bottom: 10px;
+    letter-spacing: 2px; border-bottom: 1px solid rgba(0,255,255,0.2);
+    padding-bottom: 6px;
+  }
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+  }
+  .info-card {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .info-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,255,255,0.2); }
+  .info-card-title {
+    font-weight: bold; font-size: 0.8rem; text-align: center;
     padding-bottom: 4px; border-bottom: 1px solid currentColor;
     margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;
   }
-  .face-big {
-    font-size: 26px; font-weight: bold; text-align: center;
-    margin: 6px 0; font-variant-numeric: tabular-nums;
+  .info-card-big {
+    font-size: 1.6rem; font-weight: bold; text-align: center;
+    margin: 4px 0; font-variant-numeric: tabular-nums;
   }
-  .face-row { display: flex; justify-content: space-between; font-size: 10px; padding: 2px 0; color: #b0c8e0; }
-  .face-row span:last-child { color: #fff; font-weight: bold; }
-
-  .f-gaia  { transform: translateZ(110px); }
-  .f-eco   { transform: rotateY(90deg) translateZ(110px); }
-  .f-capt  { transform: rotateY(180deg) translateZ(110px); }
-  .f-subj  { transform: rotateY(-90deg) translateZ(110px); }
-  .f-coh   { transform: rotateX(90deg) translateZ(110px); }
-  .f-alert { transform: rotateX(-90deg) translateZ(110px); }
+  .info-card-row { display: flex; justify-content: space-between; padding: 1px 0; color: #b0c8e0; }
+  .info-card-row span:last-child { color: #fff; font-weight: bold; }
 
   .controls {
     background: var(--panel);
@@ -108,7 +168,7 @@
   .btn.danger:hover { background: rgba(240,64,64,0.15); }
 
   .log-panel {
-    max-width: 1300px; margin: 20px auto 0;
+    max-width: 1400px; margin: 20px auto 0;
     background: var(--panel);
     border: 1px solid rgba(0,255,255,0.3);
     border-radius: 12px; padding: 16px;
@@ -138,55 +198,77 @@
 </header>
 
 <div class="layout">
-  <div class="scene">
-    <div class="cube" id="cube">
-      <div class="face f-gaia" id="face-gaia">
-        <div class="face-title">🌍 Gaia</div>
-        <div class="face-big" id="gaia-temp">0.00°</div>
-        <div class="face-row"><span>Permafrost</span><span id="gaia-perma">100%</span></div>
-        <div class="face-row"><span>Albedo</span><span id="gaia-albedo">1.00</span></div>
-        <div class="face-row"><span>CO₂</span><span id="gaia-co2">280</span></div>
-        <div class="face-row"><span>Metano</span><span id="gaia-metano">0.0</span></div>
-      </div>
-      <div class="face f-eco" id="face-eco">
-        <div class="face-title">⚙️ Economía</div>
-        <div class="face-big" id="eco-recursos">1000</div>
-        <div class="face-row"><span>Capital</span><span id="eco-capital">10.0</span></div>
-        <div class="face-row"><span>Producción</span><span id="eco-prod">0.0</span></div>
-        <div class="face-row"><span>EROI eco</span><span id="eco-eroi">20.0</span></div>
-        <div class="face-row"><span>Población</span><span id="eco-pob">100</span></div>
-      </div>
-      <div class="face f-capt" id="face-capt">
-        <div class="face-title">🪙 Captura</div>
-        <div class="face-big" id="capt-peaje">0.20</div>
-        <div class="face-row"><span>Filtro info</span><span id="capt-filtro">0.30</span></div>
-        <div class="face-row"><span>Narrativa</span><span id="capt-narr">50</span></div>
-        <div class="face-row"><span>Coste perp.</span><span id="capt-coste">0</span></div>
-        <div class="face-row"><span>Estado</span><span id="capt-estado">activa</span></div>
-      </div>
-      <div class="face f-subj" id="face-subj">
-        <div class="face-title">🧠 Subjetividad</div>
-        <div class="face-big" id="subj-burnout">10</div>
-        <div class="face-row"><span>Confianza</span><span id="subj-conf">60</span></div>
-        <div class="face-row"><span>Sentido</span><span id="subj-sent">50</span></div>
-        <div class="face-row"><span>Atención</span><span id="subj-atn">70</span></div>
-        <div class="face-row"><span>Bienestar</span><span id="subj-bien">55</span></div>
-      </div>
-      <div class="face f-coh" id="face-coh">
-        <div class="face-title">◈ Coherencia</div>
-        <div class="face-big" id="coh-total">0.000</div>
-        <div class="face-row"><span>M (madurez)</span><span id="coh-m">0.00</span></div>
-        <div class="face-row"><span>S (sincronía)</span><span id="coh-s">0.00</span></div>
-        <div class="face-row"><span>f(I) entropía</span><span id="coh-i">0.00</span></div>
-        <div class="face-row"><span>Turno</span><span id="coh-turno">0</span></div>
-      </div>
-      <div class="face f-alert" id="face-alert">
-        <div class="face-title">⚠️ Alertas</div>
-        <div id="alert-list" style="font-size:10px; line-height: 1.7;">
-          <div style="color:#6080a0">— sin alertas —</div>
+  <div class="left-col">
+
+    <!-- CUBO 3D + botones de snap -->
+    <div class="scene">
+      <div class="cube" id="cube">
+        <div class="face f-gaia" id="face-gaia">
+          <div class="face-title">🌍 Gaia</div>
+          <div class="face-big" id="gaia-temp">0.00°</div>
+          <div class="face-row"><span>Permafrost</span><span id="gaia-perma">100%</span></div>
+          <div class="face-row"><span>Albedo</span><span id="gaia-albedo">1.00</span></div>
+          <div class="face-row"><span>CO₂</span><span id="gaia-co2">280</span></div>
+          <div class="face-row"><span>Metano</span><span id="gaia-metano">0.0</span></div>
+        </div>
+        <div class="face f-eco" id="face-eco">
+          <div class="face-title">⚙️ Economía</div>
+          <div class="face-big" id="eco-recursos">1000</div>
+          <div class="face-row"><span>Capital</span><span id="eco-capital">10.0</span></div>
+          <div class="face-row"><span>Producción</span><span id="eco-prod">0.0</span></div>
+          <div class="face-row"><span>EROI eco</span><span id="eco-eroi">20.0</span></div>
+          <div class="face-row"><span>Población</span><span id="eco-pob">100</span></div>
+        </div>
+        <div class="face f-capt" id="face-capt">
+          <div class="face-title">🪙 Captura</div>
+          <div class="face-big" id="capt-peaje">0.20</div>
+          <div class="face-row"><span>Filtro info</span><span id="capt-filtro">0.30</span></div>
+          <div class="face-row"><span>Narrativa</span><span id="capt-narr">50</span></div>
+          <div class="face-row"><span>Coste perp.</span><span id="capt-coste">0</span></div>
+          <div class="face-row"><span>Estado</span><span id="capt-estado">activa</span></div>
+        </div>
+        <div class="face f-subj" id="face-subj">
+          <div class="face-title">🧠 Subjetividad</div>
+          <div class="face-big" id="subj-burnout">10</div>
+          <div class="face-row"><span>Confianza</span><span id="subj-conf">60</span></div>
+          <div class="face-row"><span>Sentido</span><span id="subj-sent">50</span></div>
+          <div class="face-row"><span>Atención</span><span id="subj-atn">70</span></div>
+          <div class="face-row"><span>Bienestar</span><span id="subj-bien">55</span></div>
+        </div>
+        <div class="face f-coh" id="face-coh">
+          <div class="face-title">◈ Coherencia</div>
+          <div class="face-big" id="coh-total">0.000</div>
+          <div class="face-row"><span>M (madurez)</span><span id="coh-m">0.00</span></div>
+          <div class="face-row"><span>S (sincronía)</span><span id="coh-s">0.00</span></div>
+          <div class="face-row"><span>f(I) entropía</span><span id="coh-i">0.00</span></div>
+          <div class="face-row"><span>Turno</span><span id="coh-turno">0</span></div>
+        </div>
+        <div class="face f-alert" id="face-alert">
+          <div class="face-title">⚠️ Alertas</div>
+          <div id="alert-list" style="font-size:10px; line-height: 1.7;">
+            <div style="color:#6080a0">— sin alertas —</div>
+          </div>
         </div>
       </div>
+      <!-- NUEVO: botones de snap -->
+      <div class="snap-bar">
+        <button class="snap-btn" data-snap="gaia">🌍 Gaia</button>
+        <button class="snap-btn" data-snap="eco">⚙️ Eco</button>
+        <button class="snap-btn" data-snap="capt">🪙 Capt</button>
+        <button class="snap-btn" data-snap="subj">🧠 Subj</button>
+        <button class="snap-btn" data-snap="coh">◈ Coh</button>
+        <button class="snap-btn" data-snap="alert">⚠️ Alert</button>
+      </div>
     </div>
+
+    <!-- NUEVO: panel de tarjetas siempre visible -->
+    <div class="cards-panel">
+      <h2>📊 LECTURA DE DATOS</h2>
+      <div class="cards-grid" id="cards-grid">
+        <!-- se rellena por JS -->
+      </div>
+    </div>
+
   </div>
 
   <aside class="controls">
@@ -208,14 +290,19 @@
       <input type="range" id="in-perma" min="1.0" max="3.0" step="0.1" value="2.0">
     </div>
     <div class="ctrl-row">
-      <label>Rotación cubo <span id="lbl-rot">-30°</span></label>
-      <input type="range" id="in-rot" min="-180" max="180" step="5" value="-30">
+      <label>Rotación X <span id="lbl-rotx">-20°</span></label>
+      <input type="range" id="in-rotx" min="-90" max="90" step="5" value="-20">
+    </div>
+    <div class="ctrl-row">
+      <label>Rotación Y <span id="lbl-roty">-30°</span></label>
+      <input type="range" id="in-roty" min="-180" max="180" step="5" value="-30">
     </div>
     <div class="btn-row">
       <button class="btn" id="btn-1">▶ +1 turno</button>
       <button class="btn" id="btn-10">⏩ +10</button>
       <button class="btn" id="btn-50">⏭ +50</button>
       <button class="btn danger" id="btn-reset">↺ Reset</button>
+      <button class="btn full" id="btn-autorot">🔄 Auto-rotar</button>
       <button class="btn full" id="btn-tests">🧪 Ejecutar tests</button>
     </div>
     <div class="tests-out" id="tests-out"></div>
@@ -234,12 +321,10 @@
 // UTILIDADES
 // ==================================================================
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-// Función umbral: 0 por debajo, 1 por encima, rampa suave en el medio.
-// Modela tipping points (puntos de no retorno).
 const umbral = (x, t, w = 0.2) => clamp((x - t + w) / (2 * w), 0, 1);
 
 // ==================================================================
-// PARÁMETROS (mutables desde la UI)
+// PARÁMETROS
 // ==================================================================
 const params = {
   emisionesPorTurno: 5,
@@ -251,7 +336,7 @@ const params = {
 };
 
 // ==================================================================
-// ESTADO INICIAL
+// ESTADO
 // ==================================================================
 function estadoInicial() {
   return {
@@ -279,35 +364,22 @@ let state = estadoInicial();
 // ==================================================================
 // CAPA 1 · GAIA
 // ==================================================================
-// Bucles positivos: deshielo → menos albedo → más calor → más deshielo
-//                   permafrost → metano → más calor → más permafrost
 function stepGaia(g, emisiones) {
   const n = { ...g };
-  // CO₂ sube con emisiones, baja con absorción (que cae con temperatura)
   const absorcion = 1.0 * (1 - g.temperatura * 0.05);
   n.co2 = g.co2 + emisiones * 1.0 - absorcion;
-  // Metano sube con permafrost liberado (bucle positivo)
   const permaLibre = 100 - g.permafrost;
   n.metano = g.metano + permaLibre * 0.02;
-  // Forzamiento radiativo: CO₂ + metano
   const forzamiento = (n.co2 - 280) * 0.015 + n.metano * 0.05;
-  // Albedo cae con temperatura (deshielo)
   n.albedo = clamp(1 - g.temperatura * 0.03, 0.7, 1.0);
-  // Retroalimentación albedo: menos albedo → más calor
   const retroAlbedo = (1 - n.albedo) * 0.4;
-  // Temperatura final
   n.temperatura = g.temperatura + forzamiento + retroAlbedo;
-  // Permafrost se libera por encima del umbral
   const factorPerma = umbral(n.temperatura, params.umbralPerma, 0.2);
   n.permafrost = clamp(g.permafrost - factorPerma * 3, 0, 100);
-  // Detección de colapso (runaway)
   if (n.temperatura >= params.umbralRunaway) n.colapso = true;
   return n;
 }
 
-// EROI ecológico: energía devuelta / energía invertida, considerando
-// daño ecológico no lineal. Puede ser NEGATIVO cuando Gaia ya está dañada,
-// aunque el EROI económico siga siendo positivo.
 function eroiEcologico(g, energia) {
   if (energia <= 0) return 0;
   const dano = Math.pow(g.temperatura, 2) * 10;
@@ -319,25 +391,19 @@ function eroiEcologico(g, energia) {
 // ==================================================================
 function stepEconomia(e, g, c, s) {
   const n = { ...e };
-  // Productividad real: capital × factor subjetivo (burnout reduce)
   const factorSubjetivo = (1 - s.burnout / 100) * (0.5 + s.confianza / 200);
   const productividadBruta = e.capital * factorSubjetivo * (1 + params.cargaLaboral);
-  // La economía solo VE la productividad percibida (filtrada por captura)
   const productividadPercibida = productividadBruta * (1 - c.filtroInfo)
                                + c.narrativa * c.filtroInfo * 0.1;
-  // Coste de extracción sube cuando recursos escasean (no lineal)
   n.costeExtraccion = 1 + Math.pow(1000 / Math.max(e.recursos, 1), 2) * 0.1;
-  // Extracción: limitada por capital, recursos y productividad percibida
   const extraccion = Math.min(e.capital * 2, e.recursos, productividadPercibida / n.costeExtraccion);
   n._extraccion = extraccion;
   n.recursos = Math.max(0, e.recursos - extraccion);
   n.eroiEconomico = Math.max(0.5, 20 / n.costeExtraccion);
   n.produccion = extraccion * n.eroiEconomico * 0.1;
-  // Capital: reinversión menos peaje de captura
   const peaje = n.produccion * c.peaje;
   const reinversion = (n.produccion - peaje) * 0.2;
   n.capital = e.capital + reinversion - e.capital * 0.05;
-  // Población: crece con producción, decrece con daño ecológico
   const danoEcologico = Math.pow(g.temperatura, 2) * 0.5;
   n.poblacion = clamp(e.poblacion + n.produccion * 0.01 - danoEcologico, 0, 10000);
   return n;
@@ -352,18 +418,15 @@ function emisionesEconomia(e) {
 // ==================================================================
 function stepCaptura(c, e, g) {
   const n = { ...c, control: { ...c.control } };
-  // La captura se refuerza: más control → más capacidad de peaje
   for (const k in n.control) {
     n.control[k] = clamp(n.control[k] + n.control[k] * 0.02, 0, 1);
   }
   const controlMedio = Object.values(n.control).reduce((a, b) => a + b, 0) / 4;
   n.peaje = clamp(controlMedio * 0.5, 0, 0.8);
   n.filtroInfo = clamp(n.control.informacion * 0.8, 0, 0.9);
-  // La narrativa se ajusta para mantener legitimidad ante presión ecológica
   const presionEcologica = umbral(g.temperatura, params.umbralAviso, 0.2);
   n.narrativa = clamp(n.narrativa * 0.9 + presionEcologica * 60 + 10, 0, 100);
   n.costePerpetuacion = presionEcologica * 100 + n.narrativa * 0.5;
-  // La captura se agota si el coste supera lo que puede extraer
   if (n.costePerpetuacion > e.produccion * 2 + 20) n.agotada = true;
   return n;
 }
@@ -373,17 +436,13 @@ function stepCaptura(c, e, g) {
 // ==================================================================
 function stepSubjetividad(s, e, c) {
   const n = { ...s };
-  // Burnout: sube con carga laboral (raíz del capital) y baja con sentido
   const carga = Math.sqrt(e.capital) * 1.0 * (1 + params.cargaLaboral);
   const alivio = s.sentido * 0.08;
   n.burnout = clamp(s.burnout + carga - alivio, 0, 100);
-  // Confianza: baja con captura, sube con transparencia (1 - filtro)
   const transparencia = 1 - c.filtroInfo;
   n.confianza = clamp(s.confianza * 0.95 + transparencia * 20, 0, 100);
-  // Sentido: baja con burnout, sube con producción libre (no capturada)
   const produccionLibre = e.produccion * (1 - c.peaje);
   n.sentido = clamp(s.sentido * 0.9 + produccionLibre * 0.05 - n.burnout * 0.05, 0, 100);
-  // Atención: baja con captura de información
   n.atencion = clamp(s.atencion * 0.95 + (1 - c.control.informacion) * 20, 0, 100);
   return n;
 }
@@ -397,7 +456,6 @@ function bienestar(s) {
 // ==================================================================
 function step() {
   state.turno++;
-  // Orden de acoplamiento: subjetividad → economía → captura → gaia
   state.subj = stepSubjetividad(state.subj, state.economia, state.captura);
   state.economia = stepEconomia(state.economia, state.gaia, state.captura, state.subj);
   state.captura = stepCaptura(state.captura, state.economia, state.gaia);
@@ -421,7 +479,7 @@ function step() {
 }
 
 // ==================================================================
-// COHERENCIA (M · S · f(I))
+// COHERENCIA
 // ==================================================================
 function coherencia() {
   const M = clamp((state.economia.capital / 100) * (state.economia.recursos / 1000), 0, 1);
@@ -437,7 +495,7 @@ function coherencia() {
 function render() {
   const g = state.gaia, e = state.economia, c = state.captura, s = state.subj;
 
-  // Gaia
+  // --- Cubo ---
   document.getElementById('gaia-temp').textContent = g.temperatura.toFixed(2) + '°';
   document.getElementById('gaia-perma').textContent = g.permafrost.toFixed(1) + '%';
   document.getElementById('gaia-albedo').textContent = g.albedo.toFixed(3);
@@ -449,7 +507,6 @@ function render() {
   fg.querySelector('.face-title').style.color = gaiaColor;
   document.getElementById('gaia-temp').style.color = gaiaColor;
 
-  // Economía
   document.getElementById('eco-recursos').textContent = e.recursos.toFixed(0);
   document.getElementById('eco-capital').textContent = e.capital.toFixed(1);
   document.getElementById('eco-prod').textContent = e.produccion.toFixed(1);
@@ -461,7 +518,6 @@ function render() {
   fe.querySelector('.face-title').style.color = ecoColor;
   document.getElementById('eco-recursos').style.color = ecoColor;
 
-  // Captura
   document.getElementById('capt-peaje').textContent = c.peaje.toFixed(2);
   document.getElementById('capt-filtro').textContent = c.filtroInfo.toFixed(2);
   document.getElementById('capt-narr').textContent = c.narrativa.toFixed(0);
@@ -473,7 +529,6 @@ function render() {
   fc.querySelector('.face-title').style.color = captColor;
   document.getElementById('capt-peaje').style.color = captColor;
 
-  // Subjetividad
   document.getElementById('subj-burnout').textContent = s.burnout.toFixed(0);
   document.getElementById('subj-conf').textContent = s.confianza.toFixed(0);
   document.getElementById('subj-sent').textContent = s.sentido.toFixed(0);
@@ -485,7 +540,6 @@ function render() {
   fs.querySelector('.face-title').style.color = subjColor;
   document.getElementById('subj-burnout').style.color = subjColor;
 
-  // Coherencia
   const coh = coherencia();
   document.getElementById('coh-total').textContent = coh.total.toFixed(3);
   document.getElementById('coh-m').textContent = coh.M.toFixed(2);
@@ -498,7 +552,6 @@ function render() {
   fcoh.querySelector('.face-title').style.color = cohColor;
   document.getElementById('coh-total').style.color = cohColor;
 
-  // Alertas
   const alertas = [];
   if (g.colapso) alertas.push('🔴 COLAPSO GAIA');
   else if (g.temperatura >= params.umbralAviso) alertas.push('🟡 AVISO CLIMÁTICO');
@@ -514,7 +567,10 @@ function render() {
                         : alertas.length > 0 ? '#f0c040' : '#30d060';
   fal.querySelector('.face-title').style.color = fal.style.borderColor;
 
-  // Log
+  // --- NUEVO: tarjetas de datos ---
+  renderCards(coh, alertas);
+
+  // --- Log ---
   const logBox = document.getElementById('log');
   logBox.innerHTML = state.log.slice(-30).reverse().map(l => `
     <div class="log-line">
@@ -524,12 +580,152 @@ function render() {
   `).join('');
 }
 
+// NUEVO: render del panel de tarjetas
+function renderCards(coh, alertas) {
+  const g = state.gaia, e = state.economia, c = state.captura, s = state.subj;
+  const gaiaColor = g.temperatura < 1.5 ? '#30d060' : g.temperatura < 2.5 ? '#f0c040' : '#f04040';
+  const ecoColor = e.recursos > 500 ? '#30d060' : e.recursos > 200 ? '#f0c040' : '#f04040';
+  const captColor = c.agotada ? '#f04040' : '#c084fc';
+  const subjColor = s.burnout < 30 ? '#30d060' : s.burnout < 60 ? '#f0c040' : '#f04040';
+  const cohColor = coh.total > 0.3 ? '#30d060' : coh.total > 0.1 ? '#f0c040' : '#f04040';
+
+  const cards = [
+    {
+      id: 'gaia', color: gaiaColor, titulo: '🌍 Gaia',
+      big: g.temperatura.toFixed(2) + '°',
+      rows: [
+        ['Permafrost', g.permafrost.toFixed(1) + '%'],
+        ['Albedo', g.albedo.toFixed(3)],
+        ['CO₂', g.co2.toFixed(0)],
+        ['Metano', g.metano.toFixed(1)],
+      ]
+    },
+    {
+      id: 'eco', color: ecoColor, titulo: '⚙️ Economía',
+      big: e.recursos.toFixed(0),
+      rows: [
+        ['Capital', e.capital.toFixed(1)],
+        ['Producción', e.produccion.toFixed(1)],
+        ['EROI eco', e.eroiEconomico.toFixed(2)],
+        ['Población', e.poblacion.toFixed(0)],
+      ]
+    },
+    {
+      id: 'capt', color: captColor, titulo: '🪙 Captura',
+      big: c.peaje.toFixed(2),
+      rows: [
+        ['Filtro info', c.filtroInfo.toFixed(2)],
+        ['Narrativa', c.narrativa.toFixed(0)],
+        ['Coste perp.', c.costePerpetuacion.toFixed(0)],
+        ['Estado', c.agotada ? 'AGOTADA' : 'activa'],
+      ]
+    },
+    {
+      id: 'subj', color: subjColor, titulo: '🧠 Subjetividad',
+      big: s.burnout.toFixed(0),
+      rows: [
+        ['Confianza', s.confianza.toFixed(0)],
+        ['Sentido', s.sentido.toFixed(0)],
+        ['Atención', s.atencion.toFixed(0)],
+        ['Bienestar', bienestar(s).toFixed(0)],
+      ]
+    },
+    {
+      id: 'coh', color: cohColor, titulo: '◈ Coherencia',
+      big: coh.total.toFixed(3),
+      rows: [
+        ['M (madurez)', coh.M.toFixed(2)],
+        ['S (sincronía)', coh.S.toFixed(2)],
+        ['f(I) entropía', coh.fI.toFixed(2)],
+        ['Turno', state.turno],
+      ]
+    },
+    {
+      id: 'alert', color: alertas.some(a => a.includes('🔴')) ? '#f04040' : alertas.length ? '#f0c040' : '#30d060',
+      titulo: '⚠️ Alertas',
+      big: alertas.length === 0 ? 'OK' : alertas.length + '',
+      rows: alertas.length === 0
+        ? [['—', 'sin alertas']]
+        : alertas.map(a => [a.replace(/[🔴🟡]\s*/, ''), ''])
+    },
+  ];
+
+  const grid = document.getElementById('cards-grid');
+  grid.innerHTML = cards.map(card => `
+    <div class="info-card" data-snap="${card.id}" style="border-color:${card.color}">
+      <div class="info-card-title" style="color:${card.color}">${card.titulo}</div>
+      <div class="info-card-big" style="color:${card.color}">${card.big}</div>
+      ${card.rows.map(([k, v]) => `<div class="info-card-row"><span>${k}</span><span>${v}</span></div>`).join('')}
+    </div>
+  `).join('');
+
+  // Click en tarjeta → snap del cubo a esa cara
+  grid.querySelectorAll('.info-card').forEach(el => {
+    el.addEventListener('click', () => {
+      snapTo(el.dataset.snap);
+    });
+  });
+}
+
 // ==================================================================
 // CUBO · rotación
 // ==================================================================
 const cube = document.getElementById('cube');
 let rotX = -20, rotY = -30;
-function updateCube() { cube.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`; }
+let autoRot = false;
+let autoRotAngle = 0;
+
+function updateCube() {
+  cube.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+}
+
+// NUEVO: ángulos de snap para cada cara
+const SNAP = {
+  gaia:  { x: 0,   y: 0 },
+  eco:   { x: 0,   y: -90 },
+  capt:  { x: 0,   y: 180 },
+  subj:  { x: 0,   y: 90 },
+  coh:   { x: -90, y: 0 },
+  alert: { x: 90,  y: 0 },
+};
+
+function snapTo(cara) {
+  const target = SNAP[cara];
+  if (!target) return;
+  rotX = target.x;
+  rotY = target.y;
+  updateCube();
+  // Actualizar sliders
+  document.getElementById('in-rotx').value = rotX;
+  document.getElementById('in-roty').value = rotY;
+  document.getElementById('lbl-rotx').textContent = rotX.toFixed(0) + '°';
+  document.getElementById('lbl-roty').textContent = rotY.toFixed(0) + '°';
+  // Marcar botón activo
+  document.querySelectorAll('.snap-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.snap === cara);
+  });
+}
+
+// Auto-rotación
+let autoRotRAF = null;
+function toggleAutoRot() {
+  autoRot = !autoRot;
+  document.getElementById('btn-autorot').textContent = autoRot ? '⏸ Parar rotación' : '🔄 Auto-rotar';
+  if (autoRot) {
+    const loop = () => {
+      if (!autoRot) return;
+      rotY += 0.5;
+      if (rotY > 180) rotY -= 360;
+      updateCube();
+      document.getElementById('in-roty').value = rotY;
+      document.getElementById('lbl-roty').textContent = rotY.toFixed(0) + '°';
+      autoRotRAF = requestAnimationFrame(loop);
+    };
+    loop();
+  } else {
+    if (autoRotRAF) cancelAnimationFrame(autoRotRAF);
+  }
+}
 
 // ==================================================================
 // UI
@@ -550,21 +746,36 @@ function bindUI() {
   bind('in-carga', 'lbl-carga', 'cargaLaboral', v => v.toFixed(2));
   bind('in-perma', 'lbl-perma', 'umbralPerma', v => v.toFixed(2));
 
-  document.getElementById('in-rot').addEventListener('input', (e) => {
-    rotY = parseFloat(e.target.value);
-    document.getElementById('lbl-rot').textContent = rotY.toFixed(0) + '°';
+  document.getElementById('in-rotx').addEventListener('input', (e) => {
+    rotX = parseFloat(e.target.value);
+    document.getElementById('lbl-rotx').textContent = rotX.toFixed(0) + '°';
     updateCube();
+  });
+  document.getElementById('in-roty').addEventListener('input', (e) => {
+    rotY = parseFloat(e.target.value);
+    document.getElementById('lbl-roty').textContent = rotY.toFixed(0) + '°';
+    updateCube();
+  });
+
+  // Botones de snap
+  document.querySelectorAll('.snap-btn').forEach(btn => {
+    btn.addEventListener('click', () => snapTo(btn.dataset.snap));
   });
 
   document.getElementById('btn-1').addEventListener('click', () => { step(); render(); });
   document.getElementById('btn-10').addEventListener('click', () => { for (let i=0; i<10; i++) step(); render(); });
   document.getElementById('btn-50').addEventListener('click', () => { for (let i=0; i<50; i++) step(); render(); });
-  document.getElementById('btn-reset').addEventListener('click', () => { state = estadoInicial(); render(); });
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    state = estadoInicial();
+    snapTo('gaia');
+    render();
+  });
+  document.getElementById('btn-autorot').addEventListener('click', toggleAutoRot);
   document.getElementById('btn-tests').addEventListener('click', runTests);
 }
 
 // ==================================================================
-// TESTS · demuestran las lógicas
+// TESTS
 // ==================================================================
 function runTests() {
   const out = document.getElementById('tests-out');
@@ -595,14 +806,14 @@ function runTests() {
   const t0 = g.temperatura;
   for (let i = 0; i < 20; i++) g = stepGaia(g, 5);
   assert(g.temperatura > t0, `Temperatura sube (${t0} → ${g.temperatura.toFixed(2)})`);
-  assert(g.albedo < 1, `Albedo baja (${g.albedo.toFixed(3)}) — menos reflexión → más calor`);
-  assert(g.permafrost < 100, `Permafrost se libera (${g.permafrost.toFixed(1)}%) — libera metano`);
+  assert(g.albedo < 1, `Albedo baja (${g.albedo.toFixed(3)})`);
+  assert(g.permafrost < 100, `Permafrost se libera (${g.permafrost.toFixed(1)}%)`);
 
   log('\n─ Test 3: EROI ecológico vs económico ─');
   const e1 = eroiEcologico({ temperatura: 0 }, 10);
   const e2 = eroiEcologico({ temperatura: 2.5 }, 10);
   assert(e1 > 0, `EROI ecol. positivo con Gaia sana (${e1.toFixed(2)})`);
-  assert(e2 < 0, `EROI ecol. negativo con Gaia dañada (${e2.toFixed(2)}) — deuda ecológica`);
+  assert(e2 < 0, `EROI ecol. negativo con Gaia dañada (${e2.toFixed(2)})`);
 
   log('\n─ Test 4: burnout reduce productividad ─');
   const sBajo = { burnout: 10, confianza: 60 };
@@ -614,7 +825,7 @@ function runTests() {
   log('\n─ Test 5: captura distorsiona la info ─');
   const real = 100, filtro = 0.5, narrativa = 40;
   const percibido = real * (1 - filtro) + narrativa * filtro;
-  assert(percibido !== real, `Percibido ≠ real (${percibido} vs ${real}) — la economía decide con datos distorsionados`);
+  assert(percibido !== real, `Percibido ≠ real (${percibido} vs ${real})`);
 
   log('\n─ Test 6: simulación completa 30 turnos ─');
   const saved = state;
