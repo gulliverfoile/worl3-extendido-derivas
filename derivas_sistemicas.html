@@ -1,0 +1,164 @@
+====================================================================
+MODELO DE 4 CAPAS · SIMULADOR DE DINÁMICAS SISTÉMICAS
+====================================================================
+
+QUÉ ES
+--------------------------------------------------------------------
+Un simulador autocontenido en HTML + JavaScript que modela cuatro
+capas acopladas de un sistema complejo:
+
+  1. GAIA           · biogeoquímica, clima, umbrales planetarios.
+  2. ECONOMÍA       · extracción, capital, producción, recursos.
+  3. CAPTURA        · plataformas, peajes, filtro de información.
+  4. SUBJETIVIDAD   · burnout, confianza, sentido, atención.
+
+El modelo se basa en dinámica de sistemas, bucles de retroalimentación,
+funciones no lineales, umbrales (tipping points) y acoplamiento entre
+capas. No es una teoría cerrada: es una herramienta para explorar cómo
+interactúan estos cuatro niveles y cómo emergen derivas como el colapso
+ecológico, el agotamiento de recursos, la captura de plataformas o el
+burnout social.
+
+Está inspirado en World3 (Los límites del crecimiento), pero extiende
+el modelo clásico con:
+  - EROI ecológico (puede ser negativo aunque el económico sea positivo).
+  - Capa de captura que distorsiona la información y cobra peaje.
+  - Subjetividad como stock que modifica la productividad real.
+  - Bucles positivos en Gaia (deshielo → albedo → más calor, etc.).
+
+
+QUÉ HACE
+--------------------------------------------------------------------
+- Simula la evolución del sistema turno a turno.
+- Calcula en cada paso:
+    · Temperatura, CO₂, metano, albedo, permafrost.
+    · Recursos, capital, producción, población, EROI económico.
+    · EROI ecológico (beneficio vs daño ecológico).
+    · Peaje, filtro de información, narrativa, coste de perpetuación.
+    · Burnout, confianza, sentido, atención, bienestar subjetivo.
+    · Coherencia global (M · S · f(I)).
+- Muestra un cubo 3D con 6 caras:
+    · Gaia, Economía, Captura, Subjetividad, Coherencia, Alertas.
+- Permite ajustar parámetros con sliders:
+    · Emisiones por turno.
+    · Control inicial de la captura.
+    · Carga laboral.
+    · Umbral de permafrost.
+    · Rotación del cubo.
+- Botones para avanzar +1, +10 o +50 turnos, resetear y ejecutar tests.
+- Registro de turnos con métricas clave y flags de alerta.
+- Tests integrados que demuestran las lógicas del modelo.
+
+
+CÓMO LO HACE
+--------------------------------------------------------------------
+ARQUITECTURA
+  - Estado global único: `state`.
+  - Cuatro funciones puras de paso, una por capa:
+      stepGaia(g, emisiones)
+      stepEconomia(e, g, c, s)
+      stepCaptura(c, e, g)
+      stepSubjetividad(s, e, c)
+  - Orquestador `step()` que acopla las capas en orden:
+      1. Subjetividad (modifica productividad).
+      2. Economía (produce, extrae, emite).
+      3. Captura (refuerza control, cobra peaje, filtra info).
+      4. Gaia (recibe emisiones, actualiza clima).
+  - Renderizador que pinta el cubo y el log.
+  - UI que conecta sliders y botones con el estado.
+
+CAPA 1 · GAIA
+  - Stocks: temperatura, albedo, permafrost, CO₂, metano.
+  - Bucles positivos:
+      · Deshielo → menos albedo → más calor → más deshielo.
+      · Permafrost → metano → más calor → más permafrost.
+  - Umbrales:
+      · Aviso: 1.5 °C.
+      · Permafrost: 2.0 °C (configurable).
+      · Runaway: 3.0 °C.
+  - Función `umbral(x, t, w)`: 0 por debajo, 1 por encima, rampa suave.
+  - EROI ecológico:
+      daño = temp² · 10
+      eroiEcol = (energía - daño) / energía
+      Puede ser negativo si Gaia ya está dañada.
+
+CAPA 2 · ECONOMÍA
+  - Stocks: capital, recursos, producción, población.
+  - Productividad real = capital · factor subjetivo · (1 + carga).
+  - Productividad percibida = real · (1 - filtro) + narrativa · filtro.
+  - La economía decide con la productividad percibida, no con la real.
+  - Coste de extracción sube no linealmente cuando recursos escasean.
+  - Extracción = min(capital·2, recursos, productividadPercibida / coste).
+  - EROI económico = 20 / costeExtraccion.
+  - Emisiones = extracción · 0.1 + emisionesPorTurno · 0.5.
+  - Capital se reinvierte tras pagar peaje de captura.
+  - Población crece con producción, decrece con daño ecológico.
+
+CAPA 3 · CAPTURA
+  - Stocks: control por flujo (recursos, energía, alimentos, info),
+    filtroInfo, narrativa, peaje, costePerpetuacion.
+  - El control se refuerza a sí mismo (+2% por turno).
+  - Peaje = controlMedio · 0.5.
+  - FiltroInfo = control.informacion · 0.8.
+  - Narrativa sube con presión ecológica (umbral de aviso).
+  - CostePerpetuacion = presiónEcológica · 100 + narrativa · 0.5.
+  - Captura se agota si costePerpetuacion > producción·2 + 20.
+
+CAPA 4 · SUBJETIVIDAD
+  - Stocks: burnout, confianza, sentido, atención.
+  - Burnout sube con carga laboral (raíz del capital · carga) y baja
+    con sentido.
+  - Confianza baja con filtroInfo, sube con transparencia.
+  - Sentido sube con producción libre (no capturada), baja con burnout.
+  - Atención baja con control de información.
+  - Bienestar = (100 - burnout + confianza + sentido + atención) / 4.
+
+COHERENCIA GLOBAL
+  - M = (capital / 100) · (recursos / 1000)
+  - S = (confianza / 100) · (1 - filtroInfo)
+  - I = (temperatura / 3) + (burnout / 200)
+  - f(I) = I si I <= 1; exp(-0.5 · (I-1)²) si I > 1.
+  - Coherencia = M · S · f(I).
+
+TESTS INTEGRADOS
+  - Test 1: función umbral.
+  - Test 2: bucle deshielo-albedo en Gaia.
+  - Test 3: EROI ecológico vs económico.
+  - Test 4: burnout reduce productividad.
+  - Test 5: captura distorsiona la información.
+  - Test 6: simulación completa de 30 turnos.
+  Cada test usa asserts simples y muestra OK/FALLO en pantalla.
+
+
+CÓMO USARLO
+--------------------------------------------------------------------
+1. Guarda todo el código en un archivo `.html`.
+2. Ábrelo en cualquier navegador moderno.
+3. Mueve los sliders para cambiar parámetros.
+4. Pulsa los botones para avanzar turnos.
+5. Observa el cubo y el registro.
+6. Pulsa "Ejecutar tests" para verificar las lógicas.
+
+No requiere servidor, ni instalación, ni dependencias externas.
+
+
+POSIBLE INTEGRACIÓN
+--------------------------------------------------------------------
+El código está diseñado como dominio puro (sin DOM, sin WebGL).
+Se puede integrar en arquitecturas hexagonales como un módulo más.
+Cada capa es un objeto con `estadoInicial()` y `step()`.
+El orquestador `step()` acopla las cuatro capas.
+La UI y el cubo son solo infraestructura intercambiable.
+
+Puede alimentar sistemas tipo TUSE calculando M, S e I desde la
+simulación en lugar de desde sliders manuales.
+
+
+FILOSOFÍA DEL MODELO
+--------------------------------------------------------------------
+- No hay villanos: hay estructuras que seleccionan actores.
+- La captura no prohibe: encarece, filtra, distorsiona.
+- El EROI económico puede ser positivo mientras el ecológico es negativo.
+- Los bucles positivos en Gaia pueden cruzar umbrales irreversibles.
+- La subjetividad no es un adorno: modifica la productividad real.
+- El sistema no tiene meta: tiene deriva. Y la deriva se puede estudiar.
