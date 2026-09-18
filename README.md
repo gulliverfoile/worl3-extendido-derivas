@@ -11,7 +11,7 @@ No es un modelo predictivo. No es un paper. No es una herramienta de decisión.
 Es una **herramienta de pensamiento** para explorar cómo interactúan cuatro
 niveles de un sistema complejo y cómo emergen derivas como el colapso
 ecológico, el agotamiento de recursos, la captura de plataformas o el burnout.
-
+NO es un modelo de control, quien lo use asi es su problema.
 ---
 
 ## ¿Qué es esto?
