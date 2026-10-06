@@ -1,9 +1,42 @@
+================================================================================
 SIMULADOR C · Fase 2
-Documentación conceptual
+Documentación completa
+Versión: 1.0
+Fecha: 2026
 ================================================================================
 
-Qué es
-------
+
+================================================================================
+ÍNDICE
+================================================================================
+
+  1. Qué es
+  2. Qué hace
+  3. Cómo lo hace
+    3.1 Estructura del sistema
+    3.2 Las cuatro capas
+    3.3 Coherencia
+    3.4 Recursos
+    3.5 Tejido productivo
+    3.6 Migración
+    3.7 Voto
+    3.8 Gobierno
+    3.9 Actores emergentes
+    3.10 Perturbaciones
+  4. Diagrama de acoplamiento
+  5. Tabla completa de parámetros
+  6. Guía de calibración
+  7. Lectura de pantalla
+  8. Preguntas frecuentes (FAQ)
+  9. Decisiones de diseño
+  10. Lo que no tiene
+  11. Cómo usarlo
+
+
+================================================================================
+1. QUÉ ES
+================================================================================
+
 Un laboratorio para explorar cómo interactúan cuatro capas sistémicas
 (ecológica, económica, política, subjetiva) bajo distintas reglas, a lo
 largo del tiempo, en las 17 comunidades autónomas de España.
@@ -12,16 +45,23 @@ No predice el futuro. No dice qué va a pasar. Dice qué PODRÍA pasar si
 ciertas condiciones se sostienen. Es una herramienta para pensar, no
 una bola de cristal.
 
+Su propósito es explorar, no predecir. Puedes cambiar los parámetros,
+lanzar perturbaciones, y ver qué tipos de régimen son posibles. No
+estás buscando "la respuesta correcta". Estás buscando entender el
+espacio de posibilidades.
+
+
 ================================================================================
-QUÉ HACE
+2. QUÉ HACE
 ================================================================================
 
-El simulador avanza por turnos. Cada turno representa aproximadamente un
-año. En cada turno ocurren varias cosas a la vez:
+El simulador avanza por turnos. Cada turno representa aproximadamente
+un año. En cada turno ocurren varias cosas a la vez:
 
   1. Las condiciones materiales cambian.
      La temperatura sube, los recursos se agotan, el capital crece o
-     decrece, la población se mueve, el tejido productivo se transforma.
+     decrece, la población se mueve, el tejido productivo se
+     transforma.
 
   2. La gente reacciona.
      Cambian el burnout, la confianza, la percepción de la realidad.
@@ -44,20 +84,24 @@ año. En cada turno ocurren varias cosas a la vez:
      Se va de donde se vive mal a donde se vive mejor.
      Con retardo: no es instantáneo.
 
-El usuario puede intervenir:
+El usuario puede intervenir de varias formas:
   - Cambiar parámetros (velocidades, pesos, umbrales).
   - Lanzar perturbaciones (shock económico, climático, captura, IA...).
   - Cambiar el punto de partida (presets A, B, C).
   - Hacer click en cualquier CCAA y ver todo su detalle.
+  - Ejecutar tests para verificar que el motor está sano.
+
 
 ================================================================================
-CÓMO LO HACE
+3. CÓMO LO HACE
 ================================================================================
 
-ESTRUCTURA DEL SISTEMA
-----------------------
+--------------------------------------------------------------------------------
+3.1 ESTRUCTURA DEL SISTEMA
+--------------------------------------------------------------------------------
 
 El simulador tiene 17 CCAA. Cada una es una unidad con:
+
   - Población (cambia con migración).
   - Identidad territorial (periférica, urbana).
   - Tejido productivo (agro, industria, servicios, extractivo).
@@ -67,13 +111,19 @@ El simulador tiene 17 CCAA. Cada una es una unidad con:
   - Atractivo migratorio (cuánto apetece vivir allí).
 
 A nivel nacional:
+
   - Partidos (base + territoriales + emergentes).
   - Gobierno (coalición, políticas, instituciones).
   - Actores emergentes (locales y globales).
   - Log de eventos.
 
-LAS CUATRO CAPAS
-----------------
+Cada CCAA es independiente en sus capas internas, pero está acoplada
+con las demás a través de la migración y con el sistema global a
+través del gobierno.
+
+--------------------------------------------------------------------------------
+3.2 LAS CUATRO CAPAS
+--------------------------------------------------------------------------------
 
 Cada CCAA tiene cuatro capas que se afectan entre sí. Son como cuatro
 "salud" del sistema:
@@ -98,8 +148,16 @@ Cada CCAA tiene cuatro capas que se afectan entre sí. Son como cuatro
      La gente se quema con carga laboral.
      La confianza depende de cuánta verdad circula.
 
-COHERENCIA
-----------
+Las cuatro capas están acopladas: lo que pasa en una afecta a las
+otras. Por ejemplo:
+  - Más capital genera más burnout.
+  - Más temperatura reduce la regeneración de recursos.
+  - Más filtro reduce la confianza.
+  - Menos confianza genera más actores emergentes.
+
+--------------------------------------------------------------------------------
+3.3 COHERENCIA
+--------------------------------------------------------------------------------
 
 La coherencia mide si el sistema está funcionando o se está
 desintegrando. Es un producto de tres factores:
@@ -112,12 +170,22 @@ desintegrando. Es un producto de tres factores:
 
 Si cualquiera de los tres factores es cero, la coherencia total es
 cero. Es decir: no se puede sostener un sistema si falta cualquiera de
-las tres cosas. Riqueza sin confianza no funciona. Confianza sin
-materialidad no funciona. Materialidad con desastre ecológico no
-funciona.
+las tres cosas.
 
-RECURSOS
---------
+Interpretación:
+  - Riqueza sin confianza no funciona.
+  - Confianza sin materialidad no funciona.
+  - Materialidad con desastre ecológico no funciona.
+
+Los umbrales de lectura:
+  - Coherencia > 0.3     -> sistema sano.
+  - Coherencia 0.1 - 0.3 -> sistema frágil.
+  - Coherencia < 0.1     -> sistema en riesgo de colapso.
+  - Coherencia < 0.15 durante N turnos -> emergen actores.
+
+--------------------------------------------------------------------------------
+3.4 RECURSOS
+--------------------------------------------------------------------------------
 
 Hay tres tipos:
 
@@ -139,8 +207,13 @@ Hay tres tipos:
      Durante ese tiempo, EROI bajo y emisiones altas.
      Después, EROI alto y emisiones bajas.
 
-EL TEJIDO PRODUCTIVO
---------------------
+La extracción depende de dos cosas: capital y población. Cuanto más
+capital y más gente, más se extrae. Y cuanto más se extrae, más rápido
+se agotan los recursos.
+
+--------------------------------------------------------------------------------
+3.5 TEJIDO PRODUCTIVO
+--------------------------------------------------------------------------------
 
 Cada CCAA tiene un perfil productivo que cambia lentamente:
 
@@ -152,50 +225,105 @@ Cada CCAA tiene un perfil productivo que cambia lentamente:
 Los cuatro suman 1. Cuando uno crece, los otros decrecen
 proporcionalmente. Es un cambio lento: de décadas, no de años.
 
-LA MIGRACIÓN
-------------
+El tejido afecta a:
+  - Producción económica.
+  - Capacidad de regeneración de renovables.
+  - Composición del voto.
+  - Atractivo migratorio.
+
+Por defecto la velocidad del cambio es 0.002 por turno. Es decir: en
+50 turnos, un sector puede cambiar un 10%. Es lento a propósito.
+
+--------------------------------------------------------------------------------
+3.6 MIGRACIÓN
+--------------------------------------------------------------------------------
 
 Cada CCAA tiene un "atractivo" calculado a partir de:
+
   - Renta per cápita (capital / población).
   - Bienestar subjetivo (confianza - burnout).
   - Calidad ambiental (1 - temperatura / 3).
   - Libertad (1 - filtro de información).
 
+Cada uno con un peso distinto:
+  - Renta: 30%
+  - Bienestar: 25%
+  - Ambiente: 25%
+  - Libertad: 20%
+
 Cuando hay diferencias de atractivo, la gente migra de las CCAA menos
 atractivas a las más atractivas. Con RETARDO: el flujo de hoy depende
 del atractivo de hace 2 turnos (configurable). Eso significa que la
-gente no reacciona instantáneamente. Como en la realidad.
+gente no reacciona instantáneamente.
 
 La política migratoria del gobierno modula el flujo: partidos con
 posición abierta facilitan más migración; partidos restrictivos la
-limitan.
+limitan. La política afecta al modulador global del flujo, no a las
+decisiones individuales.
 
-EL VOTO
--------
+Los flujos se calculan cada 3 turnos. La cantidad total de población
+se conserva: lo que sale de una CCAA entra en otra.
+
+--------------------------------------------------------------------------------
+3.7 VOTO
+--------------------------------------------------------------------------------
 
 Cada CCAA vota en cada elección. La decisión depende de:
-  - Estado actual (afinidad entre el programa del partido y el estado
-    real de la CCAA).
-  - Memoria electoral (gratitud o decepción acumulada).
-  - Identidad territorial (peso de partidos territoriales en CCAA con
-    identidad periférica alta).
-  - Ruido determinista (para que no sea monótono).
+
+  - Estado actual:
+      Afinidad entre el programa del partido y el estado real de la
+      CCAA. Si el partido "quiere" un mundo y el mundo está así, gana
+      puntos.
+
+  - Memoria electoral:
+      Gratitud o decepción acumulada. Si un partido gobernó y la cosa
+      fue bien, sube. Si fue mal, baja. Decae lentamente con el tiempo.
+
+  - Identidad territorial:
+      En CCAA con identidad periférica alta, los partidos territoriales
+      reciben un bonus. ERC en Cataluña, PNV en País Vasco, BNG en
+      Galicia, etc.
+
+  - Ruido determinista:
+      Una pequeña variación basada en el hash de la CCAA y el partido.
+      No es aleatorio puro: es reproducible. La misma CCAA vota igual
+      si el estado es el mismo.
+
+Los pesos de cada componente son configurables:
+  - pesoEstadoVoto (por defecto 0.4)
+  - pesoPrograma (por defecto 0.3)
+  - pesoMemoria (por defecto 0.2)
+  - pesoIdentidad (por defecto 0.1)
 
 Se aplica D'Hondt con umbral del 3%. Los escaños se suman a nivel
 nacional. Con 176 o más, se forma gobierno.
 
-GOBIERNO
---------
+--------------------------------------------------------------------------------
+3.8 GOBIERNO
+--------------------------------------------------------------------------------
 
-El gobierno es una coalición de partidos. Aplica políticas cada turno:
-  - Empuja las capas según el programa medio.
-  - Acumula captura institucional (justicia, medios, admin).
-  - La legitimidad baja cuando la captura sube.
+El gobierno es una coalición de partidos. Se forma así:
 
-Si no hay mayoría, no hay gobierno. Bloqueo institucional.
+  1. Si un partido tiene >= 176 escaños, gobierna solo.
+  2. Si no, se busca la coalición más "natural": partido más votado +
+     partidos afines (por programa) hasta sumar 176.
+  3. Si no existe coalición posible, no hay gobierno. Bloqueo.
 
-ACTORES EMERGENTES
-------------------
+Una vez formado, el gobierno:
+
+  - Aplica políticas cada turno: empuja las capas según su programa
+    medio.
+  - Acumula captura institucional: la justicia, los medios y la
+    administración se van "capturando" turno a turno.
+  - Pierde legitimidad cuando la captura sube.
+
+El efecto de las políticas es suave. No cambia el mundo de golpe. Es
+un empujón de 0.02 por turno. A lo largo de 20 turnos, eso cambia
+significativamente el sistema.
+
+--------------------------------------------------------------------------------
+3.9 ACTORES EMERGENTES
+--------------------------------------------------------------------------------
 
 Cuando una CCAA lleva N turnos con coherencia baja (por defecto 5),
 emerge un actor local. El tipo depende de las condiciones:
@@ -207,16 +335,29 @@ emerge un actor local. El tipo depende de las condiciones:
   Autoritario           -> control alto + confianza baja.
   Regionalista nuevo    -> identidad periférica alta + confianza baja.
 
+Si varios tipos cumplen condiciones, se elige por sorteo ponderado con
+semilla reproducible. El mismo estado siempre produce el mismo actor.
+
 Cuando muchas CCAA tienen actor local (por defecto 5), emerge un
 actor global.
 
 Los actores DESAPARECEN si se cumplen sus condiciones de desaparición
-(por ejemplo, si el burnout baja y el capital sube). No son permanentes.
+(por ejemplo, si el burnout baja y el capital sube). No son
+permanentes. Eso permite ver dinámicas de aparición y desaparición.
 
-PERTURBACIONES
---------------
+Cada actor tiene:
+  - Nombre (del tipo).
+  - Color (para el mapa).
+  - Programa (afinidad por capa).
+  - Base (peso electoral estructural).
+  - Tipo (para saber sus condiciones).
 
-Eventos que rompen el equilibrio:
+--------------------------------------------------------------------------------
+3.10 PERTURBACIONES
+--------------------------------------------------------------------------------
+
+Eventos que rompen el equilibrio. El usuario los lanza manualmente:
+
   ⚡ Shock económico       -> recursos -50%, capital -30%.
   🌡️ Shock climático       -> +0.5°C, +50 CO₂.
   📡 Captura masiva         -> control +0.2 en todas las CCAA.
@@ -224,8 +365,238 @@ Eventos que rompen el equilibrio:
   ⚛️ Transición nuclear    -> 20 turnos de estabilización.
   🤖 Emergencia IA          -> velocidades +30% durante 20 turnos.
 
+Cada perturbación se registra en el log con su efecto. Algunas son
+instantáneas (shock, captura, despertar). Otras tienen duración
+(nuclear, IA).
+
+Sirven para ver cómo el sistema reacciona a cambios bruscos. No para
+"ganar" ni "perder". Para explorar.
+
+
 ================================================================================
-LECTURA DE PANTALLA
+4. DIAGRAMA DE ACOPLAMIENTO
+================================================================================
+
+Las cuatro capas están acopladas. Este diagrama muestra las
+direcciones principales de influencia.
+
+                              ┌─────────────┐
+                              │             │
+                    ┌────────►│    GAIA     │────────┐
+                    │         │  (temp,CO₂) │        │
+                    │         └─────────────┘        │
+                    │                                │
+                    │  recursos                      │  agro
+                    │  regeneración                  │  decae
+                    │                                ▼
+              ┌─────┴─────┐                  ┌─────────────┐
+              │           │                  │             │
+              │ ECONOMÍA  │◄─── capital ────│   TEJIDO    │
+              │ (capital, │                  │ (agro, ind.)│
+              │  prod.)   │───► carga ──┐    └─────────────┘
+              └───────────┘             │
+                    │                   │
+                    │                   ▼
+                    │            ┌─────────────┐
+                    │            │             │
+                    │◄── peaje ──│SUBJETIVIDAD │
+                    │            │ (burnout,   │
+                    │            │  confianza) │
+                    │            └─────────────┘
+                    │                   │
+                    │                   │
+                    ▼                   ▼
+              ┌─────────────────────────────┐
+              │         CAPTURA              │
+              │ (control, filtro, narrativa) │
+              └─────────────────────────────┘
+                            │
+                            │ voto
+                            ▼
+                    ┌──────────────┐
+                    │   ELECCIONES │
+                    │   GOBIERNO   │
+                    └──────────────┘
+                            │
+                            │ políticas
+                            ▼
+                    (vuelve a las capas)
+
+BUCLES PRINCIPALES
+------------------
+
+Bucle positivo de captura:
+  Captura sube -> confianza baja -> descontento sube ->
+  actores emergentes -> más captura para reprimir.
+
+Bucle negativo de recursos:
+  Más capital -> más extracción -> menos recursos ->
+  menos producción -> menos capital.
+
+Bucle positivo de temperatura:
+  Más emisiones -> más temperatura -> menos albedo ->
+  más temperatura.
+
+Bucle negativo de regeneración:
+  Más temperatura -> menos regeneración -> menos renovables ->
+  menos producción -> menos emisiones (a veces).
+
+Bucle de migración:
+  Más atractivo -> más inmigración -> más población ->
+  más presión sobre recursos -> menos atractivo (con retardo).
+
+Bucle de memoria:
+  Partido gobierna -> sube/baja memoria -> afecta voto siguiente ->
+  partido gobierna o no -> cambia memoria.
+
+Estos bucles son los que generan la dinámica del sistema. No están
+codificados como tales: emergen de las reglas locales.
+
+
+================================================================================
+5. TABLA COMPLETA DE PARÁMETROS
+================================================================================
+
+VELOCIDADES (cuánto cambia cada capa por turno)
+-----------------------------------------------
+  velocidadGaia               0.0 - 1.5    por defecto 0.7
+  velocidadEco                0.0 - 1.5    por defecto 0.7
+  velocidadCapt               0.0 - 1.5    por defecto 0.7
+  velocidadSubj               0.0 - 1.5    por defecto 0.7
+  velocidadTejido             0.0 - 0.01   por defecto 0.003
+  velocidadMigracion          0.0 - 0.05   por defecto 0.01
+
+PESOS DEL VOTO (suman aproximadamente 1)
+----------------------------------------
+  pesoEstadoVoto              0.0 - 1.0    por defecto 0.4
+  pesoPrograma                0.0 - 1.0    por defecto 0.3
+  pesoMemoria                 0.0 - 1.0    por defecto 0.2
+  pesoIdentidad               0.0 - 0.5    por defecto 0.1
+
+RELOJES (cada cuántos turnos)
+-----------------------------
+  relojElectoral              1 - 10       por defecto 4
+  relojMigratorio             1 - 10       por defecto 3
+  relojEcologico              5 - 50       por defecto 20
+  relojTecnologico            5 - 30       por defecto 12
+
+EMERGENCIA DE ACTORES
+---------------------
+  umbralCoherenciaActor       0.02 - 0.5   por defecto 0.15
+  turnosMinimosActor          2 - 20       por defecto 5
+  ccaaParaGlobal              2 - 10       por defecto 5
+  actoresEmergentes           bool         por defecto true
+
+RECURSOS
+--------
+  tasaRegeneracionBase        0.01 - 0.15  por defecto 0.05
+  factorExtraccion            0.02 - 0.3   por defecto 0.1
+  emisionesBase               0.0 - 2.0    por defecto 0.5
+  absorcionCo2                0.005 - 0.05 por defecto 0.015
+
+VOTO Y MEMORIA
+--------------
+  fuerzaRuido                 0.0 - 3.0    por defecto 1.0
+  memoriaDecay                0.5 - 1.0    por defecto 0.9
+  umbralDHondt                0.0 - 0.1    por defecto 0.03
+
+INSTITUCIONES
+-------------
+  capturaInstitucionalPorTurno 0.0 - 0.02  por defecto 0.005
+
+MIGRACIÓN
+---------
+  migracionActiva             bool         por defecto true
+  retardoMigratorio           0 - 10       por defecto 2
+
+SUBJETIVIDAD
+------------
+  decaimientoConfianza        0.9 - 1.0    por defecto 0.98
+  decaimientoNarrativa        0.9 - 1.0    por defecto 0.98
+  factorCargaCapital          0.1 - 1.5    por defecto 0.5
+
+
+================================================================================
+6. GUÍA DE CALIBRACIÓN
+================================================================================
+
+Si el sistema va DEMASIADO RÁPIDO (todo cambia en 10 turnos)
+-----------------------------------------------------------
+  - Baja velocidadGaia a 0.3
+  - Baja velocidadEco a 0.3
+  - Baja velocidadCapt a 0.3
+  - Baja velocidadSubj a 0.3
+  - Baja velocidadTejido a 0.001
+
+Si el sistema va DEMASIADO LENTO (no pasa nada en 50 turnos)
+------------------------------------------------------------
+  - Sube velocidadGaia a 1.2
+  - Sube velocidadEco a 1.2
+  - Sube velocidadSubj a 1.2
+  - Sube velocidadTejido a 0.008
+
+Si NUNCA emergen actores
+------------------------
+  - Sube umbralCoherenciaActor a 0.25
+  - Baja turnosMinimosActor a 3
+  - Verifica que actoresEmergentes está en true
+  - Baja el capital inicial (modo experto, no hay control directo
+    pero puedes lanzar un shock económico)
+
+Si emergen DEMASIADOS actores
+-----------------------------
+  - Baja umbralCoherenciaActor a 0.08
+  - Sube turnosMinimosActor a 10
+  - Sube ccaaParaGlobal a 8
+
+Si el gobierno NUNCA es estable
+-------------------------------
+  - Sube pesoPrograma a 0.5
+  - Sube pesoMemoria a 0.3
+  - Baja fuerzaRuido a 0.3
+  - Baja umbralDHondt a 0.01
+
+Si la migración está descontrolada
+-----------------------------------
+  - Baja velocidadMigracion a 0.003
+  - Sube retardoMigratorio a 5
+  - Baja el peso de renta en el atractivo (modo experto, no
+    implementado aún; usar el preset B que tiene migración más suave)
+
+Si el sistema siempre colapsa
+------------------------------
+  - Sube tasaRegeneracionBase a 0.10
+  - Baja emisionesBase a 0.2
+  - Baja factorExtraccion a 0.05
+  - Sube absorcionCo2 a 0.03
+
+Si el sistema nunca colapsa
+----------------------------
+  - Sube emisionesBase a 1.0
+  - Baja tasaRegeneracionBase a 0.02
+  - Sube factorExtraccion a 0.2
+
+CALIBRACIÓN POR PRESET
+----------------------
+
+  Preset A (electoral):
+    Ideal para ver dinámicas políticas puras. El sistema casi no
+    cambia materialmente. Los actores no emergen. Útil para estudiar
+    cómo evoluciona el voto sin que el mundo cambie.
+
+  Preset B (ecológico):
+    Ideal para ver colapsos ecológicos. El sistema material se
+    degrada rápido. Útil para ver cómo la política no puede parar
+    lo que la física impone.
+
+  Preset C (acoplado):
+    Ideal para ver interacciones complejas. Todo importa. Es el
+    preset por defecto. Útil para explorar cómo aparecen regímenes
+    híbridos, actores emergentes, y bifurcaciones.
+
+
+================================================================================
+7. LECTURA DE PANTALLA
 ================================================================================
 
 MAPA DE CCAA
@@ -237,8 +608,10 @@ emergente local. Click para ver el detalle.
 DETALLE DE CCAA
 ---------------
 Cuando haces click en una CCAA, arriba aparece un panel de diagnóstico:
-  - Si hay actor emergente: cuál, tipo, cuándo emergió.
-  - Si no: si está en riesgo, con barra de progreso hacia la emergencia.
+  - Si hay actor emergente: cuál, tipo, cuándo emergió, si va a
+    desaparecer.
+  - Si no: si está en riesgo, con barra de progreso hacia la
+    emergencia, y qué tipos son candidatos.
 
 Luego vienen cuatro tarjetas de capa:
   🌍 Gaia       -> temperatura actual, CO₂, permafrost.
@@ -248,7 +621,8 @@ Luego vienen cuatro tarjetas de capa:
 
 Debajo, tres métricas demográficas:
   - Población actual y % de cambio desde el inicio.
-  - Migración neta del último ciclo (positiva = llegan, negativa = se van).
+  - Migración neta del último ciclo (positiva = llegan, negativa =
+    se van).
   - Atractivo migratorio calculado.
 
 Luego los recursos (renovables, no renovables, energía), el tejido
@@ -296,24 +670,137 @@ CCAA que están en riesgo de emergencia.
 REGISTRO
 --------
 Log de eventos. Cada línea tiene un turno y una descripción. Los
-colores indican el tipo: elecciones, gobierno, migración, actores,
-avisos, colapso.
+colores indican el tipo:
+  - Azul: elecciones, gobierno.
+  - Morado: actores emergentes.
+  - Naranja: avisos (cambios bruscos).
+  - Rojo: colapsos.
+  - Verde: ciclos ecológicos.
+  - Cian: migración.
 
 HUD INFERIOR
 ------------
 Resumen permanente:
   - Turno actual.
   - Relojes (electoral, migratorio, ecológico).
-  - Coherencia, temperatura, población, actores.
+  - Coherencia media, temperatura media, población, actores.
 
 PARÁMETROS
 ----------
 En modo simple hay 10 controles. En modo experto se despliegan más
-categorías: migración, tejido, recursos, voto, emergencia, instituciones,
-perturbaciones. Cada control tiene una explicación breve.
+categorías: migración, tejido, recursos, voto, emergencia,
+instituciones, perturbaciones. Cada control tiene una explicación
+breve debajo.
+
+PRESETS
+-------
+Los botones de arriba cambian el preset. Cada preset ajusta un
+conjunto de parámetros. No son "modos de juego": son puntos de
+partida. Puedes modificarlos todos después.
+
 
 ================================================================================
-DECISIONES DE DISEÑO
+8. PREGUNTAS FRECUENTES (FAQ)
+================================================================================
+
+P: ¿Por qué mi CCAA nunca tiene actor emergente?
+R: Porque su coherencia no ha bajado del umbral durante suficientes
+   turnos. Comprueba el diagnóstico en el detalle de la CCAA. Verás
+   cuántos turnos lleva con coherencia baja. Si no llega al mínimo,
+   no emerge. Puedes bajar el umbral en modo experto, o subir las
+   velocidades para que el sistema se degrade más rápido.
+
+P: ¿Por qué el gobierno nunca es estable?
+R: Porque el sistema está muy ruidoso. Prueba:
+   - Subir pesoPrograma (los partidos con base fuerte ganan más).
+   - Subir pesoMemoria (la inercia electoral ayuda a la estabilidad).
+   - Bajar fuerzaRuido (menos variabilidad).
+   - Bajar umbralDHondt (más partidos entran, más coaliciones posibles).
+
+P: ¿Por qué la temperatura sube aunque no haga nada?
+R: Porque el sistema económico está emitiendo por defecto. La
+   parámetro emisionesBase está en 0.5, lo que significa que cada
+   turno se emiten 0.5 unidades. Si quieres que no suba, baja
+   emisionesBase a 0, o sube absorcionCo2 para que la biosfera
+   absorba más.
+
+P: ¿Por qué la población de mi CCAA baja?
+R: Porque su atractivo es menor que el de otras. La gente migra a
+   donde vive mejor. Si quieres que no baje, sube el capital, la
+   confianza, o baja el filtro de información. O reduce la
+   velocidadMigracion en modo experto.
+
+P: ¿Por qué el sistema colapsa siempre a los 40 turnos?
+R: Porque los parámetros por defecto son bastante duros. Prueba:
+   - Bajar emisionesBase a 0.2.
+   - Subir tasaRegeneracionBase a 0.10.
+   - Bajar factorExtraccion a 0.05.
+   - O usar el preset A, que tiene las capas más lentas.
+
+P: ¿Los tests que ejecuto cambian el estado del sistema?
+R: No. Los tests crean su propio estado interno, lo modifican, y lo
+   descartan. El estado principal no se toca. Puedes pulsar "Tests"
+   en cualquier momento sin miedo.
+
+P: ¿Puedo guardar una partida?
+R: Ahora mismo no. Es una funcionalidad pendiente para la Fase 3.
+   Lo que sí puedes hacer es copiar el estado desde la consola del
+   navegador si sabes JavaScript.
+
+P: ¿Por qué los actores emergentes son siempre iguales?
+R: Porque el sorteo usa una semilla determinista basada en el
+   nombre de la CCAA y el turno. Si el estado es el mismo, el actor
+   es el mismo. Si quieres variedad, cambia las condiciones (baja el
+   umbral, sube las velocidades) o lanza perturbaciones antes.
+
+P: ¿Qué significa "coherencia = 0.000"?
+R: Que al menos uno de los tres factores (M, S, f(I)) es cero. Mira
+   el desglose en el detalle de la CCAA para ver cuál. Normalmente
+   es M (capital o recursos agotados) o S (confianza cero).
+
+P: ¿Por qué el hemiciclo no suma 350 escaños?
+R: Debería sumar 350 exactos. Si no lo hace, hay un bug. Pulsa
+   "Tests" y comprueba si el test de "escaños suman 350" falla.
+   Si falla, avísame.
+
+P: ¿Puedo cambiar los partidos?
+R: Los programas de los partidos base no se pueden editar desde la
+   UI todavía. Los actores emergentes sí cambian según las
+   condiciones. Es una funcionalidad pendiente para Fase 3.
+
+P: ¿Qué pasa si el gobierno no se forma?
+R: El sistema entra en bloqueo. No hay políticas aplicadas. La
+   legitimidad baja. En la próxima elección, el sistema intentará
+   otra vez. Si el bloqueo dura mucho, la coherencia baja porque no
+   hay gobierno que gestione.
+
+P: ¿Por qué algunos partidos nunca ganan en algunas CCAA?
+R: Porque su programa no resuena con el estado de esa CCAA, o
+   porque su base es muy baja. Por ejemplo, el partido Verde tiene
+   base 0.10, así que necesita que la temperatura sea alta y la
+   confianza sea baja para ganar. En una CCAA sana, no gana.
+
+P: ¿Qué significa el número al lado de cada partido en el desglose?
+R: Es el score. Un número entre 0 y 1 que combina estado, programa,
+   memoria y ruido. Cuanto más alto, más probable es que ese partido
+   gane. Los scores se normalizan para sumar 1, y luego se aplica
+   D'Hondt.
+
+P: ¿Por qué la barra de progreso del actor emergente a veces sube y
+   a veces baja?
+R: Porque el contador `coherenciaBaja` sube cuando la coherencia está
+   por debajo del umbral, y baja cuando está por encima. No es una
+   barra de "progreso hacia emergencia". Es un contador que puede
+   subir y bajar según las condiciones.
+
+P: ¿Por qué a veces hay un punto morado en el mapa y otras veces no?
+R: El punto morado indica que esa CCAA tiene un actor emergente
+   local. Aparece cuando el contador llega al mínimo. Desaparece
+   cuando el actor cumple su condición de desaparición.
+
+
+================================================================================
+9. DECISIONES DE DISEÑO
 ================================================================================
 
 1. CCAA en lugar de provincias.
@@ -357,29 +844,70 @@ DECISIONES DE DISEÑO
     Cada parámetro tiene una explicación. Cada uno es un juicio
     de valor explícito, no un hecho oculto.
 
-================================================================================
-LO QUE NO TIENE (Y POR QUÉ)
-================================================================================
+11. Sin predicción.
+    El simulador no dice qué va a pasar. Dice qué podría pasar si
+    las condiciones se sostienen. Es una herramienta para explorar,
+    no una bola de cristal.
 
-- Comercio interregional: complicaría el modelo sin añadir mucho al
-  foco político. Se puede añadir después.
+12. Arquitectura hexagonal por eventos.
+    El dominio no sabe que existe el DOM. Los renderers se suscriben
+    a eventos. Eso permite añadir nuevos renderers (canvas, móvil)
+    sin tocar el motor. Y permite testear el motor sin navegador.
 
-- Validación histórica: todavía no hay datos emparejados con elecciones
-  reales. Es una fase futura.
-
-- Modo comparación: dos escenarios en paralelo. Útil pero no esencial.
-
-- Exportar resultados: los datos se pueden sacar por consola si hace
-  falta. Una UI de exportación sería refinamiento.
-
-- Predicción: nunca. El simulador explora espacios de posibilidad,
-  no predice futuros concretos.
 
 ================================================================================
-CÓMO USARLO
+10. LO QUE NO TIENE (Y POR QUÉ)
+================================================================================
+
+- Comercio interregional:
+  Complicaría el modelo sin añadir mucho al foco político. Se puede
+  añadir después si hace falta.
+
+- Validación histórica:
+  Todavía no hay datos emparejados con elecciones reales. Es una
+  fase futura. Cuando la haya, se puede comparar el comportamiento
+  del simulador con datos reales de 2008-2023.
+
+- Modo comparación:
+  Dos escenarios en paralelo. Útil pero no esencial. Se puede añadir
+  duplicando el estado y ejecutando dos motores.
+
+- Exportar resultados:
+  Los datos se pueden sacar por consola si hace falta. Una UI de
+  exportación sería refinamiento.
+
+- Predicción:
+  Nunca. El simulador explora espacios de posibilidad, no predice
+  futuros concretos.
+
+- Guardar/cargar partidas:
+  Pendiente. La estructura de estado ya está preparada para
+  serializarse a JSON. Solo falta la UI.
+
+- Editar programas de partidos:
+  Pendiente. La tabla de programas ya existe internamente. Solo
+  falta exponerla en modo experto.
+
+- Más tipos de recursos:
+  Ahora hay tres (renovables, no renovables, energía). Se podrían
+  añadir más (reciclables, agua dulce, biomasa específica). No
+  urgente.
+
+- Comercio con el exterior:
+  El sistema es cerrado. No hay importaciones ni exportaciones. Se
+  podría añadir, pero complica mucho.
+
+- Segundo reloj tecnológico:
+  El campo relojTecnologico existe pero no se usa todavía. Pensado
+  para la Fase 3 (desbloqueos tecnológicos condicionados).
+
+
+================================================================================
+11. CÓMO USARLO
 ================================================================================
 
 PARA EXPLORAR
+-------------
   1. Carga un preset (A, B o C).
   2. Pulsa +50 turnos.
   3. Mira qué pasa. Click en las CCAA que más cambien.
@@ -387,12 +915,14 @@ PARA EXPLORAR
   5. Compara.
 
 PARA PROBAR UNA HIPÓTESIS
+-------------------------
   1. Antes de correr, decide qué esperas que pase.
   2. Configura el escenario.
   3. Corre y observa.
   4. ¿Pasa lo que esperabas? ¿Por qué sí o por qué no?
 
 PARA INVESTIGAR UNA CCAA
+------------------------
   1. Click en la CCAA.
   2. Lee el diagnóstico de actor.
   3. Mira el desglose de voto.
@@ -400,8 +930,40 @@ PARA INVESTIGAR UNA CCAA
   5. Identifica qué capa está fallando.
 
 PARA VER EL EFECTO DE UNA PERTURBACIÓN
+--------------------------------------
   1. Corre 20 turnos hasta que el sistema esté estable.
   2. Lanza una perturbación (shock, captura, IA).
   3. Corre 20 turnos más.
   4. Compara las gráficas. Mira el log. Mira las CCAA.
-=============================================================
+
+PARA EXPLORAR REGÍMENES
+-----------------------
+  1. Carga preset C.
+  2. Baja velocidadGaia a 0.1 y sube velocidadEco a 1.5.
+  3. Corre 100 turnos.
+  4. Repite con otros valores.
+  5. ¿Qué combinaciones producen estabilidad? ¿Cuáles colapso?
+  6. Eso es el espacio de regímenes.
+
+PARA APRENDER CÓMO FUNCIONA POR DENTRO
+---------------------------------------
+  1. Abre la consola del navegador (F12).
+  2. Teclea: Estado.run
+  3. Verás el estado completo en JSON.
+  4. Teclea: Estado.params
+  5. Verás los parámetros actuales.
+  6. Puedes modificarlos desde la consola si sabes JS.
+
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================
+
+Este documento describe el estado actual (Fase 2) del simulador. Las
+fases futuras añadirán más capacidades. Si encuentras algo que no
+está explicado, o algo que no coincide con el comportamiento real,
+avísame y lo documentamos.
+
+El simulador es un andamio para el pensamiento. No busca ser La Verdad,
+sino una herramienta para navegar su ausencia.
+================================================================================
