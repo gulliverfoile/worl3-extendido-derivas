@@ -1,0 +1,407 @@
+SIMULADOR C · Fase 2
+Documentación conceptual
+================================================================================
+
+Qué es
+------
+Un laboratorio para explorar cómo interactúan cuatro capas sistémicas
+(ecológica, económica, política, subjetiva) bajo distintas reglas, a lo
+largo del tiempo, en las 17 comunidades autónomas de España.
+
+No predice el futuro. No dice qué va a pasar. Dice qué PODRÍA pasar si
+ciertas condiciones se sostienen. Es una herramienta para pensar, no
+una bola de cristal.
+
+================================================================================
+QUÉ HACE
+================================================================================
+
+El simulador avanza por turnos. Cada turno representa aproximadamente un
+año. En cada turno ocurren varias cosas a la vez:
+
+  1. Las condiciones materiales cambian.
+     La temperatura sube, los recursos se agotan, el capital crece o
+     decrece, la población se mueve, el tejido productivo se transforma.
+
+  2. La gente reacciona.
+     Cambian el burnout, la confianza, la percepción de la realidad.
+     Se acumulan memorias de lo que han hecho los gobiernos.
+
+  3. Cada pocos turnos, hay elecciones.
+     La gente vota según cómo está, cómo recuerda y quién es.
+     Se reparten escaños. Se forma (o no) gobierno.
+
+  4. El gobierno aplica políticas.
+     Empuja el sistema en una dirección según su programa.
+     Acumula poder institucional. La legitimidad sube o baja.
+
+  5. Si la cosa se degrada mucho, emergen actores nuevos.
+     Populistas, tecnócratas, verdes radicales, autoritarios,
+     regionalistas nuevos. Cada uno con su programa.
+     Si la cosa mejora, desaparecen.
+
+  6. Cada tres turnos, la gente migra.
+     Se va de donde se vive mal a donde se vive mejor.
+     Con retardo: no es instantáneo.
+
+El usuario puede intervenir:
+  - Cambiar parámetros (velocidades, pesos, umbrales).
+  - Lanzar perturbaciones (shock económico, climático, captura, IA...).
+  - Cambiar el punto de partida (presets A, B, C).
+  - Hacer click en cualquier CCAA y ver todo su detalle.
+
+================================================================================
+CÓMO LO HACE
+================================================================================
+
+ESTRUCTURA DEL SISTEMA
+----------------------
+
+El simulador tiene 17 CCAA. Cada una es una unidad con:
+  - Población (cambia con migración).
+  - Identidad territorial (periférica, urbana).
+  - Tejido productivo (agro, industria, servicios, extractivo).
+  - Recursos (renovables, no renovables, energía).
+  - Cuatro capas sistémicas: Gaia, Economía, Captura, Subjetividad.
+  - Memoria electoral (gratitud/decepción hacia cada partido).
+  - Atractivo migratorio (cuánto apetece vivir allí).
+
+A nivel nacional:
+  - Partidos (base + territoriales + emergentes).
+  - Gobierno (coalición, políticas, instituciones).
+  - Actores emergentes (locales y globales).
+  - Log de eventos.
+
+LAS CUATRO CAPAS
+----------------
+
+Cada CCAA tiene cuatro capas que se afectan entre sí. Son como cuatro
+"salud" del sistema:
+
+  🌍 GAIA
+     Temperatura, CO₂, permafrost.
+     Sube con emisiones. Baja si el sistema respira.
+     Cuando sube, degrada la regeneración de recursos y el agro.
+
+  ⚙️ ECONOMÍA
+     Capital, producción, EROI energético.
+     Crece con producción, decrece con mantenimiento.
+     Depende de recursos disponibles y energía.
+
+  🪙 CAPTURA
+     Control, filtro de información, narrativa.
+     El gobierno controla más o menos la información disponible.
+     Cuanto más filtro, menos confianza y más desconexión.
+
+  🧠 SUBJETIVIDAD
+     Burnout, confianza, sentido.
+     La gente se quema con carga laboral.
+     La confianza depende de cuánta verdad circula.
+
+COHERENCIA
+----------
+
+La coherencia mide si el sistema está funcionando o se está
+desintegrando. Es un producto de tres factores:
+
+  Coherencia = M · S · f(I)
+
+  M = madurez material (capital · recursos disponibles)
+  S = sincronía social (confianza · transparencia)
+  f(I) = gestión de la fricción (temperatura + burnout)
+
+Si cualquiera de los tres factores es cero, la coherencia total es
+cero. Es decir: no se puede sostener un sistema si falta cualquiera de
+las tres cosas. Riqueza sin confianza no funciona. Confianza sin
+materialidad no funciona. Materialidad con desastre ecológico no
+funciona.
+
+RECURSOS
+--------
+
+Hay tres tipos:
+
+  🌾 Renovables
+     Agricultura, pesca, agua, biomasa.
+     SE REGENERAN según la salud ecosistémica (temperatura).
+     Cuanto más caliente, menos se regeneran.
+     Cuanto más agro tenga la CCAA, más capacidad de regeneración.
+
+  ⛏️ No renovables
+     Minerales, fósiles.
+     NO se regeneran. Se agotan linealmente.
+     Cuanto más extractivo sea el tejido, más hay, pero también
+     más rápido se acaba.
+
+  ⚡ Energía
+     Tiene EROI (energía neta por energía invertida) y emisiones.
+     La nuclear tarda 20 turnos en estabilizarse.
+     Durante ese tiempo, EROI bajo y emisiones altas.
+     Después, EROI alto y emisiones bajas.
+
+EL TEJIDO PRODUCTIVO
+--------------------
+
+Cada CCAA tiene un perfil productivo que cambia lentamente:
+
+  🌾 Agro       -> decrece con temperatura alta.
+  ⚙️ Industria  -> crece con capital alto.
+  🏙️ Servicios -> crece con capital y población urbana.
+  ⛏️ Extractivo -> decrece cuando se agotan los no renovables.
+
+Los cuatro suman 1. Cuando uno crece, los otros decrecen
+proporcionalmente. Es un cambio lento: de décadas, no de años.
+
+LA MIGRACIÓN
+------------
+
+Cada CCAA tiene un "atractivo" calculado a partir de:
+  - Renta per cápita (capital / población).
+  - Bienestar subjetivo (confianza - burnout).
+  - Calidad ambiental (1 - temperatura / 3).
+  - Libertad (1 - filtro de información).
+
+Cuando hay diferencias de atractivo, la gente migra de las CCAA menos
+atractivas a las más atractivas. Con RETARDO: el flujo de hoy depende
+del atractivo de hace 2 turnos (configurable). Eso significa que la
+gente no reacciona instantáneamente. Como en la realidad.
+
+La política migratoria del gobierno modula el flujo: partidos con
+posición abierta facilitan más migración; partidos restrictivos la
+limitan.
+
+EL VOTO
+-------
+
+Cada CCAA vota en cada elección. La decisión depende de:
+  - Estado actual (afinidad entre el programa del partido y el estado
+    real de la CCAA).
+  - Memoria electoral (gratitud o decepción acumulada).
+  - Identidad territorial (peso de partidos territoriales en CCAA con
+    identidad periférica alta).
+  - Ruido determinista (para que no sea monótono).
+
+Se aplica D'Hondt con umbral del 3%. Los escaños se suman a nivel
+nacional. Con 176 o más, se forma gobierno.
+
+GOBIERNO
+--------
+
+El gobierno es una coalición de partidos. Aplica políticas cada turno:
+  - Empuja las capas según el programa medio.
+  - Acumula captura institucional (justicia, medios, admin).
+  - La legitimidad baja cuando la captura sube.
+
+Si no hay mayoría, no hay gobierno. Bloqueo institucional.
+
+ACTORES EMERGENTES
+------------------
+
+Cuando una CCAA lleva N turnos con coherencia baja (por defecto 5),
+emerge un actor local. El tipo depende de las condiciones:
+
+  Populista izquierda   -> burnout alto + capital bajo.
+  Populista derecha     -> burnout alto + filtro bajo.
+  Tecnócrata            -> capital bajo + confianza baja.
+  Verde radical         -> temperatura alta.
+  Autoritario           -> control alto + confianza baja.
+  Regionalista nuevo    -> identidad periférica alta + confianza baja.
+
+Cuando muchas CCAA tienen actor local (por defecto 5), emerge un
+actor global.
+
+Los actores DESAPARECEN si se cumplen sus condiciones de desaparición
+(por ejemplo, si el burnout baja y el capital sube). No son permanentes.
+
+PERTURBACIONES
+--------------
+
+Eventos que rompen el equilibrio:
+  ⚡ Shock económico       -> recursos -50%, capital -30%.
+  🌡️ Shock climático       -> +0.5°C, +50 CO₂.
+  📡 Captura masiva         -> control +0.2 en todas las CCAA.
+  💡 Despertar civil       -> confianza +20, filtro -0.15.
+  ⚛️ Transición nuclear    -> 20 turnos de estabilización.
+  🤖 Emergencia IA          -> velocidades +30% durante 20 turnos.
+
+================================================================================
+LECTURA DE PANTALLA
+================================================================================
+
+MAPA DE CCAA
+------------
+Cada hexágono es una CCAA. El color indica el partido que ganó las
+últimas elecciones en esa CCAA. El punto morado indica que hay un actor
+emergente local. Click para ver el detalle.
+
+DETALLE DE CCAA
+---------------
+Cuando haces click en una CCAA, arriba aparece un panel de diagnóstico:
+  - Si hay actor emergente: cuál, tipo, cuándo emergió.
+  - Si no: si está en riesgo, con barra de progreso hacia la emergencia.
+
+Luego vienen cuatro tarjetas de capa:
+  🌍 Gaia       -> temperatura actual, CO₂, permafrost.
+  ⚙️ Economía   -> capital, producción, EROI energético.
+  🪙 Captura    -> filtro de información, control, narrativa.
+  🧠 Subjetividad -> burnout, confianza, sentido.
+
+Debajo, tres métricas demográficas:
+  - Población actual y % de cambio desde el inicio.
+  - Migración neta del último ciclo (positiva = llegan, negativa = se van).
+  - Atractivo migratorio calculado.
+
+Luego los recursos (renovables, no renovables, energía), el tejido
+productivo (con deltas por sector), la fórmula de coherencia
+desglosada, y el desglose del voto (con porcentaje y score de cada
+partido).
+
+GRÁFICA NACIONAL
+----------------
+Evolución de siete series en los últimos 100 turnos:
+  - Coherencia media.
+  - Temperatura media.
+  - Capital medio.
+  - Renovables medios.
+  - Población media.
+  - Filtro de información medio.
+  - Burnout medio.
+
+Permite ver tendencias de largo plazo. No solo el estado actual.
+
+FLUJOS MIGRATORIOS
+------------------
+Lista de las rutas migratorias más activas del último ciclo. Muestra
+de dónde a dónde, cuánta gente.
+
+GOBIERNO
+--------
+Coalición actual, desde cuándo, legitimidad, captura institucional
+(justicia, medios, admin) y política migratoria resultante.
+
+HEMICICLO
+---------
+Reparto de escaños por partido. Los colores coinciden con el mapa.
+
+TABLA DE CCAA
+-------------
+Vista compacta de todas las CCAA. Ordenable por cualquier columna.
+Click en fila -> selecciona la CCAA.
+
+ACTORES
+-------
+Lista de actores emergentes activos (locales y globales) más las
+CCAA que están en riesgo de emergencia.
+
+REGISTRO
+--------
+Log de eventos. Cada línea tiene un turno y una descripción. Los
+colores indican el tipo: elecciones, gobierno, migración, actores,
+avisos, colapso.
+
+HUD INFERIOR
+------------
+Resumen permanente:
+  - Turno actual.
+  - Relojes (electoral, migratorio, ecológico).
+  - Coherencia, temperatura, población, actores.
+
+PARÁMETROS
+----------
+En modo simple hay 10 controles. En modo experto se despliegan más
+categorías: migración, tejido, recursos, voto, emergencia, instituciones,
+perturbaciones. Cada control tiene una explicación breve.
+
+================================================================================
+DECISIONES DE DISEÑO
+================================================================================
+
+1. CCAA en lugar de provincias.
+   17 unidades es más manejable que 52. Cada CCAA tiene identidad
+   clara y significado político real.
+
+2. Turnos = años.
+   Permite que los relojes tengan sentido: elecciones cada 4 años,
+   ciclo ecológico mayor cada 20, migración cada 3.
+
+3. Cuatro capas en lugar de más.
+   Suficiente para capturar los acoplamientos esenciales sin volverse
+   inmanejable. Si se añaden más, el usuario se pierde.
+
+4. Coherencia como producto de tres factores.
+   Si cualquiera de los tres falla, todo cae. Es una decisión
+   conceptual: no se puede sostener un sistema sin materialidad,
+   sin confianza y sin gestión de la fricción.
+
+5. Recursos con regeneración.
+   Sin esto, el sistema solo puede mostrar colapso. Con esto, puede
+   mostrar regímenes sostenibles, ciclos, transiciones.
+
+6. Memoria electoral.
+   Sin memoria, cada elección se decide en el presente puro. Con
+   memoria, hay inercia, lealtades, castigos diferidos.
+
+7. Migración con retardo.
+   La gente no reacciona instantáneamente. Reacciona 2-3 turnos
+   después. Eso genera desfases que son interesantes.
+
+8. Actores con desaparición.
+   No son permanentes. Si la situación mejora, se van. Eso permite
+   ver dinámicas de aparición y desaparición.
+
+9. Partidos territoriales.
+   Sin ellos, el voto en Cataluña o País Vasco no tiene sentido.
+   Con ellos, hay tensión entre identidad y programa.
+
+10. Todo editable en modo experto.
+    Cada parámetro tiene una explicación. Cada uno es un juicio
+    de valor explícito, no un hecho oculto.
+
+================================================================================
+LO QUE NO TIENE (Y POR QUÉ)
+================================================================================
+
+- Comercio interregional: complicaría el modelo sin añadir mucho al
+  foco político. Se puede añadir después.
+
+- Validación histórica: todavía no hay datos emparejados con elecciones
+  reales. Es una fase futura.
+
+- Modo comparación: dos escenarios en paralelo. Útil pero no esencial.
+
+- Exportar resultados: los datos se pueden sacar por consola si hace
+  falta. Una UI de exportación sería refinamiento.
+
+- Predicción: nunca. El simulador explora espacios de posibilidad,
+  no predice futuros concretos.
+
+================================================================================
+CÓMO USARLO
+================================================================================
+
+PARA EXPLORAR
+  1. Carga un preset (A, B o C).
+  2. Pulsa +50 turnos.
+  3. Mira qué pasa. Click en las CCAA que más cambien.
+  4. Cambia un parámetro. Vuelve a correr.
+  5. Compara.
+
+PARA PROBAR UNA HIPÓTESIS
+  1. Antes de correr, decide qué esperas que pase.
+  2. Configura el escenario.
+  3. Corre y observa.
+  4. ¿Pasa lo que esperabas? ¿Por qué sí o por qué no?
+
+PARA INVESTIGAR UNA CCAA
+  1. Click en la CCAA.
+  2. Lee el diagnóstico de actor.
+  3. Mira el desglose de voto.
+  4. Mira la fórmula de coherencia.
+  5. Identifica qué capa está fallando.
+
+PARA VER EL EFECTO DE UNA PERTURBACIÓN
+  1. Corre 20 turnos hasta que el sistema esté estable.
+  2. Lanza una perturbación (shock, captura, IA).
+  3. Corre 20 turnos más.
+  4. Compara las gráficas. Mira el log. Mira las CCAA.
+=============================================================
