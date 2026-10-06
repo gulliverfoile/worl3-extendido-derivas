@@ -1,0 +1,2292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Simulador C · Fase 2</title>
+<style>
+  :root {
+    --bg:#0a0e14; --panel:#131820; --panel-2:#1c2330; --borde:#1f2733;
+    --texto:#d8e0ea; --apagado:#6b7785; --acento:#58a6ff;
+    --ok:#3fb950; --warn:#d29922; --bad:#f85149;
+    --gaia:#3fb950; --eco:#d29922; --capt:#c084fc; --subj:#58a6ff;
+    --emerg:#c084fc; --migr:#38bdf8;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--texto);
+    font-family:system-ui,-apple-system,sans-serif; font-size:13px; padding:12px; }
+  header { max-width:1700px; margin:0 auto 12px;
+    display:flex; justify-content:space-between; align-items:center;
+    flex-wrap:wrap; gap:12px; border-bottom:1px solid var(--borde); padding-bottom:10px; }
+  header h1 { font-size:15px; font-weight:600; }
+  header .presets { display:flex; gap:6px; flex-wrap:wrap; }
+  header .presets button { padding:5px 12px; font-size:12px;
+    background:var(--panel); color:var(--texto); border:1px solid var(--borde);
+    border-radius:4px; cursor:pointer; font-family:inherit; }
+  header .presets button.activo { background:var(--acento); color:#000;
+    border-color:var(--acento); font-weight:600; }
+  header .modo { display:flex; gap:6px; align-items:center;
+    font-size:11px; color:var(--apagado); }
+  header .modo button { padding:4px 10px; font-size:11px;
+    background:var(--panel-2); color:var(--texto); border:1px solid var(--borde);
+    border-radius:4px; cursor:pointer; font-family:inherit; }
+  header .modo button.activo { background:var(--emerg); color:#000; border-color:var(--emerg); }
+  main { max-width:1700px; margin:0 auto;
+    display:grid; grid-template-columns:1fr 420px; gap:12px; }
+  @media (max-width:1200px) { main { grid-template-columns:1fr; } }
+  .panel { background:var(--panel); border:1px solid var(--borde);
+    border-radius:6px; padding:12px; margin-bottom:12px; }
+  .panel h2 { font-size:11px; text-transform:uppercase; letter-spacing:1px;
+    color:var(--apagado); margin-bottom:10px; font-weight:600;
+    display:flex; justify-content:space-between; align-items:center;
+    flex-wrap:wrap; gap:6px; }
+  .panel h2 .hint { font-size:10px; font-weight:400; letter-spacing:0;
+    text-transform:none; color:#556; }
+  #mapa svg { width:100%; height:auto; display:block; }
+  #mapa .hex { stroke:#0a0e14; stroke-width:1.5; cursor:pointer; }
+  #mapa .hex:hover { opacity:0.8; }
+  #mapa .hex.activa { stroke:var(--acento); stroke-width:3; }
+  #mapa .hex-label { font-size:9px; fill:#fff; text-anchor:middle;
+    dominant-baseline:middle; pointer-events:none;
+    text-shadow:0 1px 3px rgba(0,0,0,1); font-weight:600; }
+  #mapa .actor-mark { fill:var(--emerg); stroke:#fff; stroke-width:1; }
+  .estado-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:10px; }
+  .estado-cap { background:var(--panel-2); border-radius:4px; padding:8px; border-left:3px solid; }
+  .estado-cap .titulo { font-size:10px; color:var(--apagado);
+    text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }
+  .estado-cap .valor { font-size:16px; font-weight:700;
+    font-variant-numeric:tabular-nums; margin:2px 0; }
+  .estado-cap .sub { font-size:10px; color:#8899aa; font-family:ui-monospace,monospace; }
+  .recursos-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:8px 0; }
+  .recurso { background:var(--panel-2); border-radius:4px; padding:6px 8px; font-size:11px; }
+  .recurso .nombre { color:var(--apagado); font-size:10px; text-transform:uppercase; }
+  .recurso .val { font-weight:700; font-variant-numeric:tabular-nums; }
+  .recurso .barra { height:4px; background:rgba(0,0,0,0.4); border-radius:2px; overflow:hidden; margin-top:3px; }
+  .recurso .barra div { height:100%; }
+  .tejido-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin:8px 0; }
+  .tejido { background:var(--panel-2); border-radius:4px; padding:6px; font-size:11px; text-align:center; position:relative; }
+  .tejido .nombre { color:var(--apagado); font-size:10px; }
+  .tejido .val { font-weight:700; font-variant-numeric:tabular-nums; }
+  .tejido .delta { font-size:9px; }
+  .voto-desglose { display:flex; flex-direction:column; gap:4px; font-size:11px;
+    font-family:ui-monospace,monospace; }
+  .voto-fila { display:grid; grid-template-columns:130px 55px 1fr 60px;
+    gap:8px; align-items:center; padding:4px 6px;
+    background:var(--panel-2); border-radius:3px; border-left:3px solid; }
+  .voto-fila .nombre { font-weight:600; }
+  .voto-fila .barra { height:8px; background:rgba(0,0,0,0.4); border-radius:2px; overflow:hidden; }
+  .voto-fila .barra div { height:100%; }
+  .voto-fila .pct { text-align:right; font-weight:600; }
+  .voto-fila .score { text-align:right; color:var(--apagado); font-size:10px; }
+  table.datos { width:100%; border-collapse:collapse; font-size:11px;
+    font-family:ui-monospace,monospace; }
+  table.datos th { text-align:left; padding:4px 6px; color:var(--apagado);
+    font-weight:600; text-transform:uppercase; font-size:10px;
+    letter-spacing:0.5px; border-bottom:1px solid var(--borde);
+    cursor:pointer; user-select:none; }
+  table.datos th:hover { color:var(--acento); }
+  table.datos td { padding:4px 6px; border-bottom:1px solid rgba(255,255,255,0.03); }
+  table.datos tr { cursor:pointer; }
+  table.datos tr:hover { background:var(--panel-2); }
+  table.datos tr.activa { background:#1c2838; }
+  table.datos .num { text-align:right; font-variant-numeric:tabular-nums; }
+  .ctrl { display:flex; flex-direction:column; gap:3px; margin-bottom:8px; }
+  .ctrl label { font-size:11px; color:var(--apagado);
+    display:flex; justify-content:space-between; align-items:baseline; }
+  .ctrl label span:last-child { color:var(--acento); font-weight:600;
+    font-variant-numeric:tabular-nums; }
+  .ctrl .explica { font-size:10px; color:#556; margin-top:1px; line-height:1.4; }
+  .ctrl input[type=range] { width:100%; accent-color:var(--acento); }
+  .btn-row { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  button { padding:7px; font-size:12px; background:var(--panel-2);
+    color:var(--texto); border:1px solid var(--borde); border-radius:4px;
+    cursor:pointer; font-family:inherit; }
+  button:hover { background:#253040; }
+  button.primario { background:var(--acento); color:#000; border-color:var(--acento); font-weight:600; }
+  button.peligro { color:var(--bad); border-color:var(--bad); }
+  button.full { grid-column:1 / -1; }
+  button.emerg { background:var(--emerg); color:#000; border-color:var(--emerg); }
+  details.experto { margin-top:12px; border-top:1px solid var(--borde); padding-top:12px; }
+  details.experto summary { cursor:pointer; font-size:12px; font-weight:600;
+    color:var(--acento); padding:4px 0; user-select:none; }
+  details.experto summary:hover { color:#79b8ff; }
+  details.experto .contenido { padding:8px 0 0 0; }
+  .gobierno-info { background:var(--panel-2); border-radius:4px; padding:10px;
+    font-size:12px; line-height:1.6; }
+  .gobierno-info .coalicion { font-weight:600; }
+  .gobierno-info .tag { display:inline-block; padding:1px 6px; border-radius:3px;
+    background:rgba(255,255,255,0.08); font-size:10px; margin-right:4px; }
+  #log { max-height:220px; overflow-y:auto; font-family:ui-monospace,monospace;
+    font-size:11px; line-height:1.5; }
+  #log p { padding:2px 0; color:#a8b2c0;
+    border-bottom:1px solid rgba(255,255,255,0.03); }
+  #log p .t { color:var(--apagado); margin-right:6px; }
+  #log p.elec { color:#d8e0ea; font-weight:600; }
+  #log p.actor { color:var(--emerg); }
+  #log p.warn { color:var(--warn); }
+  #log p.bad { color:var(--bad); }
+  #log p.eco { color:var(--gaia); }
+  #log p.gob { color:var(--acento); }
+  #log p.migr { color:var(--migr); }
+  .hud-bottom { max-width:1700px; margin:12px auto 0; padding:10px 14px;
+    background:var(--panel); border:1px solid var(--borde); border-radius:6px;
+    display:flex; gap:14px; flex-wrap:wrap; align-items:center; font-size:12px; }
+  .hud-bottom .reloj { font-family:ui-monospace,monospace;
+    background:var(--panel-2); padding:4px 10px; border-radius:4px;
+    display:flex; gap:6px; align-items:baseline; }
+  .hud-bottom .reloj strong { color:var(--acento); font-variant-numeric:tabular-nums; }
+  .hud-bottom .reloj .label { color:var(--apagado); font-size:10px; }
+  #tests-out { display:none; background:#0a0e14; padding:10px; border-radius:4px;
+    font-family:ui-monospace,monospace; font-size:11px;
+    max-height:400px; overflow-y:auto; margin-top:8px; line-height:1.5; }
+  #tests-out.visible { display:block; }
+  .ok { color:var(--ok); } .fail { color:var(--bad); }
+  .test-detalle { color:var(--apagado); margin-left:8px; font-size:10px; }
+  .leyenda-graficas { display:flex; gap:12px; flex-wrap:wrap;
+    margin-top:6px; font-size:10px; }
+  .leyenda-graficas span { display:flex; align-items:center; gap:4px;
+    color:var(--apagado); }
+  .leyenda-graficas .sw { width:10px; height:2px; }
+  .grafica-svg { width:100%; height:140px; display:block; }
+  .grafica-svg .grid { stroke:rgba(255,255,255,0.05); stroke-width:0.5; }
+  .grafica-svg polyline { fill:none; stroke-width:1.5; stroke-linejoin:round; }
+  .flujo-lista { display:flex; flex-direction:column; gap:3px;
+    font-family:ui-monospace,monospace; font-size:11px; margin-top:6px; }
+  .flujo-item { display:grid; grid-template-columns:1fr 60px 1fr 60px;
+    gap:6px; align-items:center; padding:3px 6px;
+    background:var(--panel-2); border-radius:3px; }
+  .flujo-item .ccaa { font-weight:600; }
+  .flujo-item .num { text-align:right; color:var(--migr); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>◈ Simulador C · Fase 2</h1>
+  <div class="presets" id="presets"></div>
+  <div class="modo">
+    <span>Modo:</span>
+    <button id="btn-simple" class="activo">Simple</button>
+    <button id="btn-experto">Experto</button>
+  </div>
+</header>
+
+<main>
+  <div>
+    <div class="panel">
+      <h2>CCAA · click para detalle <span class="hint" id="preset-desc"></span></h2>
+      <div id="mapa"></div>
+    </div>
+    <div class="panel">
+      <h2 id="ccaa-titulo">Detalle de CCAA</h2>
+      <div id="ccaa-detalle"></div>
+    </div>
+    <div class="panel">
+      <h2>Evolución nacional (últimos 100 turnos)</h2>
+      <div id="grafica-historial"></div>
+      <div class="leyenda-graficas" id="grafica-leyenda"></div>
+    </div>
+    <div class="panel">
+      <h2>Flujos migratorios recientes</h2>
+      <div id="flujos-migratorios"></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <h2>Gobierno actual</h2>
+      <div id="gobierno-info" class="gobierno-info">Sin gobierno formado.</div>
+    </div>
+    <div class="panel">
+      <h2>Hemiciclo</h2>
+      <div id="hemiciclo"></div>
+      <div id="leyenda" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;font-size:12px;"></div>
+    </div>
+    <div class="panel">
+      <h2>Parámetros</h2>
+      <div id="controles-simples"></div>
+      <details class="experto" id="panel-experto">
+        <summary>⚙️ Modo experto</summary>
+        <div class="contenido">
+          <h3 style="font-size:11px;color:var(--apagado);text-transform:uppercase;letter-spacing:1px;margin:8px 0 6px;">Migración</h3>
+          <div id="controles-migracion"></div>
+          <h3 style="font-size:11px;color:var(--apagado);text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px;">Tejido productivo</h3>
+          <div id="controles-tejido"></div>
+          <h3 style="font-size:11px;color:var(--apagado);text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px;">Recursos y regeneración</h3>
+          <div id="controles-recursos"></div>
+          <h3 style="font-size:11px;color:var(--apagado);text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px;">Voto y memoria</h3>
+          <div id="controles-voto"></div>
+          <h3 style="font-size:11px;color:var(--apagado);text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px;">Emergencia de actores</h3>
+          <div id="controles-emerg"></div>
+          <h3 style="font-size:11px;color:var(--apagado);text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px;">Instituciones</h3>
+          <div id="controles-instit"></div>
+          <h3 style="font-size:11px;color:var(--apagado);text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px;">Perturbaciones</h3>
+          <div class="btn-row">
+            <button id="pert-eco">⚡ Shock económico</button>
+            <button id="pert-clima">🌡️ Shock climático</button>
+            <button id="pert-capt">📡 Captura masiva</button>
+            <button id="pert-despertar">💡 Despertar civil</button>
+            <button id="pert-nuclear">⚛️ Transición nuclear</button>
+            <button id="pert-ia" class="emerg full">🤖 Emergencia IA</button>
+          </div>
+        </div>
+      </details>
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="primario" id="btn-turno">▶ Turno</button>
+        <button id="btn-10">⏩ +10</button>
+        <button id="btn-50" class="full">⏭ +50</button>
+        <button class="peligro full" id="btn-reset">↺ Reset</button>
+        <button class="full" id="btn-tests">🧪 Tests</button>
+      </div>
+      <div id="tests-out"></div>
+    </div>
+    <div class="panel">
+      <h2>Tabla CCAA</h2>
+      <div style="overflow-x:auto;">
+        <table class="datos" id="tabla-ccaa">
+          <thead>
+            <tr>
+              <th data-orden="nombre">CCAA</th>
+              <th data-orden="escanos" class="num">Esc</th>
+              <th data-orden="poblacion" class="num">Pob</th>
+              <th data-orden="temp" class="num">T°</th>
+              <th data-orden="capital" class="num">Cap</th>
+              <th data-orden="renovables" class="num">Ren</th>
+              <th data-orden="filtro" class="num">Fil</th>
+              <th data-orden="burnout" class="num">Bur</th>
+              <th data-orden="coherencia" class="num">Coh</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-ccaa-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Actores emergentes</h2>
+      <div id="actores" style="font-size:12px;"></div>
+    </div>
+    <div class="panel">
+      <h2>Registro <span class="hint" id="log-count"></span></h2>
+      <div id="log"></div>
+    </div>
+  </div>
+</main>
+
+<div class="hud-bottom">
+  <span class="reloj"><span class="label">Turno</span><strong id="hud-turno">0</strong></span>
+  <span class="reloj"><span class="label">Elec</span><strong id="hud-elec">0/4</strong></span>
+  <span class="reloj"><span class="label">Migr</span><strong id="hud-migr">0/3</strong></span>
+  <span class="reloj"><span class="label">Eco</span><strong id="hud-eco">0/20</strong></span>
+  <span class="reloj"><span class="label">Coh.</span><strong id="hud-coh">0.000</strong></span>
+  <span class="reloj"><span class="label">T°</span><strong id="hud-temp">0.00°</strong></span>
+  <span class="reloj"><span class="label">Pob</span><strong id="hud-pob">0</strong></span>
+  <span class="reloj"><span class="label">Actores</span><strong id="hud-actores">0</strong></span>
+</div>
+
+<script>
+'use strict';
+
+/* ============================================================================
+   SECCIÓN 0 · BUS
+   ============================================================================ */
+class EventBus {
+  constructor() { this._l = new Map(); }
+  on(ev, cb) {
+    if (!this._l.has(ev)) this._l.set(ev, new Set());
+    this._l.get(ev).add(cb);
+    return () => this._l.get(ev)?.delete(cb);
+  }
+  emit(ev, data) {
+    this._l.get(ev)?.forEach(cb => {
+      try { cb(data); } catch (e) { console.error(`[bus:${ev}]`, e); }
+    });
+  }
+}
+const BUS = new EventBus();
+
+/* ============================================================================
+   SECCIÓN 1 · UTILIDADES
+   ============================================================================ */
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const umbral = (x, t, w = 0.2) => clamp((x - t + w) / (2 * w), 0, 1);
+const fmt = (n, d = 1) => Number(n).toFixed(d);
+const pct = (n) => (n * 100).toFixed(1) + '%';
+function hash(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+  return Math.abs(h);
+}
+function rng(seed) {
+  let s = seed;
+  return () => {
+    s = (s * 9301 + 49297) % 233280;
+    return s / 233280;
+  };
+}
+
+/* ============================================================================
+   SECCIÓN 2 · DATOS BASE · CCAA
+   ============================================================================ */
+const CCAA_BASE = [
+  { id:'andalucia', nombre:'Andalucía', escanos:61, fila:2, col:6, pob:8500,
+    identidad:{periferica:0.15, urbana:0.55},
+    tejido:{agro:0.35, industria:0.15, servicios:0.40, extractivo:0.10},
+    tags:['agricola','plebe'] },
+  { id:'cataluna', nombre:'Cataluña', escanos:48, fila:0, col:8, pob:7800,
+    identidad:{periferica:0.75, urbana:0.80},
+    tejido:{agro:0.05, industria:0.30, servicios:0.60, extractivo:0.05},
+    tags:['industrial','comercio'] },
+  { id:'madrid', nombre:'Madrid', escanos:37, fila:1, col:5, pob:6800,
+    identidad:{periferica:0.05, urbana:0.90},
+    tejido:{agro:0.02, industria:0.15, servicios:0.80, extractivo:0.03},
+    tags:['industrial','imperial'] },
+  { id:'valenciana', nombre:'C. Valenciana', escanos:33, fila:1, col:7, pob:5100,
+    identidad:{periferica:0.35, urbana:0.70},
+    tejido:{agro:0.20, industria:0.25, servicios:0.50, extractivo:0.05},
+    tags:['comercio','local'] },
+  { id:'galicia', nombre:'Galicia', escanos:23, fila:0, col:0, pob:2700,
+    identidad:{periferica:0.55, urbana:0.40},
+    tejido:{agro:0.30, industria:0.20, servicios:0.40, extractivo:0.10},
+    tags:['agricola','local'] },
+  { id:'castillaleon', nombre:'Castilla y León', escanos:31, fila:1, col:3, pob:2400,
+    identidad:{periferica:0.15, urbana:0.30},
+    tejido:{agro:0.45, industria:0.20, servicios:0.30, extractivo:0.05},
+    tags:['agricola','local'] },
+  { id:'castillamancha', nombre:'Castilla-La Mancha', escanos:21, fila:1, col:6, pob:2050,
+    identidad:{periferica:0.10, urbana:0.40},
+    tejido:{agro:0.50, industria:0.20, servicios:0.25, extractivo:0.05},
+    tags:['agricola','plebe'] },
+  { id:'paisvasco', nombre:'País Vasco', escanos:18, fila:0, col:4, pob:2200,
+    identidad:{periferica:0.80, urbana:0.70},
+    tejido:{agro:0.05, industria:0.40, servicios:0.50, extractivo:0.05},
+    tags:['industrial','local'] },
+  { id:'canarias', nombre:'Canarias', escanos:15, fila:3, col:0, pob:2200,
+    identidad:{periferica:0.45, urbana:0.65},
+    tejido:{agro:0.10, industria:0.05, servicios:0.80, extractivo:0.05},
+    tags:['comercio','local'] },
+  { id:'aragon', nombre:'Aragón', escanos:13, fila:0, col:7, pob:1350,
+    identidad:{periferica:0.20, urbana:0.50},
+    tejido:{agro:0.35, industria:0.25, servicios:0.35, extractivo:0.05},
+    tags:['agricola','industrial'] },
+  { id:'murcia', nombre:'Murcia', escanos:10, fila:2, col:7, pob:1500,
+    identidad:{periferica:0.15, urbana:0.55},
+    tejido:{agro:0.35, industria:0.15, servicios:0.40, extractivo:0.10},
+    tags:['agricola','comercio'] },
+  { id:'extremadura', nombre:'Extremadura', escanos:10, fila:2, col:4, pob:1100,
+    identidad:{periferica:0.15, urbana:0.35},
+    tejido:{agro:0.50, industria:0.10, servicios:0.30, extractivo:0.10},
+    tags:['agricola','local'] },
+  { id:'baleares', nombre:'Baleares', escanos:8, fila:1, col:9, pob:1200,
+    identidad:{periferica:0.35, urbana:0.70},
+    tejido:{agro:0.05, industria:0.05, servicios:0.85, extractivo:0.05},
+    tags:['comercio','local'] },
+  { id:'asturias', nombre:'Asturias', escanos:7, fila:0, col:2, pob:1000,
+    identidad:{periferica:0.25, urbana:0.55},
+    tejido:{agro:0.15, industria:0.35, servicios:0.40, extractivo:0.10},
+    tags:['industrial','local'] },
+  { id:'navarra', nombre:'Navarra', escanos:5, fila:0, col:5, pob:670,
+    identidad:{periferica:0.60, urbana:0.55},
+    tejido:{agro:0.20, industria:0.35, servicios:0.40, extractivo:0.05},
+    tags:['industrial','local'] },
+  { id:'cantabria', nombre:'Cantabria', escanos:5, fila:0, col:3, pob:590,
+    identidad:{periferica:0.30, urbana:0.55},
+    tejido:{agro:0.20, industria:0.25, servicios:0.50, extractivo:0.05},
+    tags:['agricola','local'] },
+  { id:'rioja', nombre:'La Rioja', escanos:4, fila:0, col:6, pob:320,
+    identidad:{periferica:0.20, urbana:0.50},
+    tejido:{agro:0.40, industria:0.25, servicios:0.30, extractivo:0.05},
+    tags:['agricola','local'] },
+];
+
+/* Partidos base + territoriales.
+   Los territoriales solo se presentan en su CCAA. */
+const PARTIDOS_BASE = [
+  { id:'rojo', nombre:'Izquierda', color:'#e53935', base:0.25,
+    programa:{ gaia:+0.5, eco:-0.3, capt:-0.4, subj:+0.4 },
+    politicaMigratoria: +0.5 },
+  { id:'azul', nombre:'Derecha', color:'#1e88e5', base:0.30,
+    programa:{ gaia:-0.3, eco:+0.5, capt:+0.4, subj:-0.2 },
+    politicaMigratoria: -0.5 },
+  { id:'verde', nombre:'Verde', color:'#43a047', base:0.10,
+    programa:{ gaia:+0.8, eco:-0.4, capt:-0.3, subj:+0.2 },
+    politicaMigratoria: +0.3 },
+  { id:'naranja', nombre:'Centro', color:'#fb8c00', base:0.15,
+    programa:{ gaia:+0.1, eco:+0.1, capt:0,    subj:+0.1 },
+    politicaMigratoria: 0 },
+  // Territoriales
+  { id:'pnv', nombre:'PNV', color:'#66bb6a', base:0.10,
+    programa:{ gaia:+0.2, eco:+0.3, capt:+0.2, subj:+0.1 },
+    politicaMigratoria: -0.2,
+    territorial: 'paisvasco' },
+  { id:'erc', nombre:'ERC', color:'#fbc02d', base:0.10,
+    programa:{ gaia:+0.4, eco:0, capt:-0.3, subj:+0.3 },
+    politicaMigratoria: +0.2,
+    territorial: 'cataluna' },
+  { id:'junts', nombre:'Junts', color:'#00897b', base:0.08,
+    programa:{ gaia:0, eco:+0.4, capt:+0.2, subj:0 },
+    politicaMigratoria: -0.3,
+    territorial: 'cataluna' },
+  { id:'bng', nombre:'BNG', color:'#7cb342', base:0.08,
+    programa:{ gaia:+0.5, eco:0, capt:-0.4, subj:+0.3 },
+    politicaMigratoria: +0.2,
+    territorial: 'galicia' },
+  { id:'cc', nombre:'Coalición Canaria', color:'#fdd835', base:0.08,
+    programa:{ gaia:+0.3, eco:+0.2, capt:+0.1, subj:+0.1 },
+    politicaMigratoria: -0.1,
+    territorial: 'canarias' },
+];
+
+/* Tipos de actor emergente. Cada uno con condiciones de emergencia,
+   condiciones de DESAPARICIÓN (si la situación mejora), y programa. */
+const TIPOS_ACTOR = {
+  'populista_izq': {
+    nombre: 'Populista izquierda', color: '#ff6b35',
+    programa: { gaia:+0.6, eco:-0.5, capt:-0.6, subj:+0.7 },
+    base: 0.15,
+    condiciones: (c) => c.capas.subj.burnout > 50 && c.capas.eco.capital < 20,
+    desaparece: (c) => c.capas.subj.burnout < 30 && c.capas.eco.capital > 25,
+    peso: 1.0,
+  },
+  'populista_der': {
+    nombre: 'Populista derecha', color: '#4a148c',
+    programa: { gaia:-0.5, eco:+0.4, capt:+0.7, subj:-0.4 },
+    base: 0.15,
+    condiciones: (c) => c.capas.subj.burnout > 50 && c.capas.capt.filtro < 0.4,
+    desaparece: (c) => c.capas.subj.burnout < 30 && c.capas.capt.filtro > 0.6,
+    peso: 1.0,
+  },
+  'tecnocrata': {
+    nombre: 'Tecnócrata', color: '#00838f',
+    programa: { gaia:+0.3, eco:+0.4, capt:+0.1, subj:-0.1 },
+    base: 0.12,
+    condiciones: (c) => c.capas.eco.capital < 15 && c.capas.subj.confianza < 40,
+    desaparece: (c) => c.capas.eco.capital > 25 && c.capas.subj.confianza > 55,
+    peso: 1.0,
+  },
+  'verde_radical': {
+    nombre: 'Verde radical', color: '#1b5e20',
+    programa: { gaia:+0.9, eco:-0.7, capt:-0.5, subj:+0.3 },
+    base: 0.10,
+    condiciones: (c) => c.capas.gaia.temp > 1.5,
+    desaparece: (c) => c.capas.gaia.temp < 1.0,
+    peso: 1.0,
+  },
+  'autoritario': {
+    nombre: 'Autoritario', color: '#37474f',
+    programa: { gaia:-0.2, eco:+0.2, capt:+0.9, subj:-0.8 },
+    base: 0.10,
+    condiciones: (c) => c.capas.capt.control > 0.6 && c.capas.subj.confianza < 35,
+    desaparece: (c) => c.capas.capt.control < 0.4 && c.capas.subj.confianza > 50,
+    peso: 1.0,
+  },
+  'regionalista_nuevo': {
+    nombre: 'Regionalista nuevo', color: '#ffa726',
+    programa: { gaia:+0.2, eco:+0.1, capt:-0.3, subj:+0.4 },
+    base: 0.12,
+    condiciones: (c) => c.identidad.periferica > 0.5 && c.capas.subj.confianza < 45,
+    desaparece: (c) => c.capas.subj.confianza > 65,
+    peso: 0.8,
+  },
+};
+
+const PRESETS = {
+  A: {
+    nombre: 'A · Electoral',
+    descripcion: 'El voto manda. Capas lentas. Sin actores emergentes. Sin migración.',
+    velocidadGaia: 0.2, velocidadEco: 0.5, velocidadCapt: 0.5, velocidadSubj: 0.5,
+    pesoEstadoVoto: 0.3, pesoPrograma: 0.5, pesoMemoria: 0.2, pesoIdentidad: 0.1,
+    actoresEmergentes: false, migracionActiva: false,
+    relojElectoral: 4, relojEcologico: 20, relojTecnologico: 12, relojMigratorio: 3,
+    umbralCoherenciaActor: 0.15, turnosMinimosActor: 5, ccaaParaGlobal: 5,
+    umbralDHondt: 0.03, fuerzaRuido: 1.0,
+    decaimientoConfianza: 0.98, decaimientoNarrativa: 0.98,
+    factorCargaCapital: 0.5, factorExtraccion: 0.1,
+    emisionesBase: 0.5, absorcionCo2: 0.015,
+    tasaRegeneracionBase: 0.05,
+    capturaInstitucionalPorTurno: 0.005, memoriaDecay: 0.9,
+    velocidadTejido: 0.002, velocidadMigracion: 0.005,
+    retardoMigratorio: 2,
+  },
+  B: {
+    nombre: 'B · Ecológico',
+    descripcion: 'Gaia manda. Las elecciones no cambian nada material. Migración moderada.',
+    velocidadGaia: 1.2, velocidadEco: 0.7, velocidadCapt: 0.3, velocidadSubj: 0.3,
+    pesoEstadoVoto: 0.7, pesoPrograma: 0.2, pesoMemoria: 0.1, pesoIdentidad: 0.1,
+    actoresEmergentes: false, migracionActiva: true,
+    relojElectoral: 4, relojEcologico: 20, relojTecnologico: 12, relojMigratorio: 3,
+    umbralCoherenciaActor: 0.15, turnosMinimosActor: 5, ccaaParaGlobal: 5,
+    umbralDHondt: 0.03, fuerzaRuido: 1.0,
+    decaimientoConfianza: 0.98, decaimientoNarrativa: 0.98,
+    factorCargaCapital: 0.5, factorExtraccion: 0.1,
+    emisionesBase: 0.5, absorcionCo2: 0.015,
+    tasaRegeneracionBase: 0.05,
+    capturaInstitucionalPorTurno: 0.005, memoriaDecay: 0.9,
+    velocidadTejido: 0.002, velocidadMigracion: 0.008,
+    retardoMigratorio: 2,
+  },
+  C: {
+    nombre: 'C · Acoplado',
+    descripcion: 'Todo importa. Actores emergen. Migración completa.',
+    velocidadGaia: 0.7, velocidadEco: 0.7, velocidadCapt: 0.7, velocidadSubj: 0.7,
+    pesoEstadoVoto: 0.4, pesoPrograma: 0.3, pesoMemoria: 0.2, pesoIdentidad: 0.1,
+    actoresEmergentes: true, migracionActiva: true,
+    relojElectoral: 4, relojEcologico: 20, relojTecnologico: 12, relojMigratorio: 3,
+    umbralCoherenciaActor: 0.15, turnosMinimosActor: 5, ccaaParaGlobal: 5,
+    umbralDHondt: 0.03, fuerzaRuido: 1.0,
+    decaimientoConfianza: 0.98, decaimientoNarrativa: 0.98,
+    factorCargaCapital: 0.5, factorExtraccion: 0.1,
+    emisionesBase: 0.5, absorcionCo2: 0.015,
+    tasaRegeneracionBase: 0.05,
+    capturaInstitucionalPorTurno: 0.005, memoriaDecay: 0.9,
+    velocidadTejido: 0.003, velocidadMigracion: 0.01,
+    retardoMigratorio: 2,
+  },
+};
+
+/* ============================================================================
+   SECCIÓN 3 · ESTADO
+   ============================================================================ */
+const Estado = (() => {
+  let params = { ...PRESETS.C };
+  let run = null;
+  let ccaaActiva = null;
+  let modo = 'simple';
+
+  function ccaaInicial(base) {
+    const agro = base.tejido.agro;
+    const extract = base.tejido.extractivo;
+    const industria = base.tejido.industria;
+    return {
+      ...base,
+      tags: [...base.tags],
+      identidad: { ...base.identidad },
+      tejido: { ...base.tejido },
+      tejidoPrevio: { ...base.tejido },
+      poblacion: base.pob,
+      poblacionInicial: base.pob,
+      recursos: {
+        renovables: {
+          stock: 800 + agro * 1500,
+          capacidad: 800 + agro * 1500,
+          tasaBase: 0.05,
+        },
+        noRenovables: {
+          stock: 300 + extract * 2000,
+          capacidad: 300 + extract * 2000,
+          tasaExtraccion: 0.02 + extract * 0.05,
+        },
+        energia: {
+          eroi: 8, emisiones: 0.5, tipo: 'mixto', turnosEstabilizando: 0,
+        },
+      },
+      capas: {
+        gaia: { temp: 0, co2: 280, permafrost: 100 },
+        eco:  { capital: 10 + industria * 30, produccion: 0 },
+        capt: { control: 0.2, filtro: 0.15, narrativa: 50 },
+        subj: { burnout: 10, confianza: 60, sentido: 50 },
+      },
+      atractivo: 0,
+      atractivoPrevio: 0,
+      memoria: {},
+      ultimoVoto: {},
+      ultimoDesglose: {},
+      estadoSnapshot: null,
+      coherenciaBaja: 0,
+      actorLocal: null,
+      turnoEmergencia: null,
+      historial: [],
+      migracionNeta: 0,
+    };
+  }
+
+  function estadoInicial(presetKey) {
+    const ccaas = {};
+    for (const base of CCAA_BASE) ccaas[base.id] = ccaaInicial(base);
+    return {
+      turno: 0,
+      relojElectoral: 0,
+      relojEcologico: 0,
+      relojTecnologico: 0,
+      relojMigratorio: 0,
+      preset: presetKey,
+      ccaas,
+      partidos: PARTIDOS_BASE.map(p => ({
+        ...p,
+        programa: { ...p.programa },
+        escaños: 0,
+        enGobierno: false,
+        memoriaHistorica: 0,
+      })),
+      gobierno: null,
+      log: [],
+      historialNacional: [],
+      perturbacionesActivas: [],
+      actoresGlobales: [],
+      flujosRecientes: [],
+      semilla: 12345,
+    };
+  }
+
+  return {
+    get run() { return run; },
+    get params() { return params; },
+    get ccaaActiva() { return ccaaActiva; },
+    get modo() { return modo; },
+    setPreset(key) {
+      const p = PRESETS[key];
+      if (!p) return;
+      params = { ...p };
+      run = estadoInicial(key);
+      ccaaActiva = null;
+      BUS.emit('reset', { run, params });
+      BUS.emit('change', { run, params, ccaaActiva, modo });
+    },
+    step() {
+      stepMotor(run, params);
+      BUS.emit('change', { run, params, ccaaActiva, modo });
+    },
+    stepN(n) {
+      for (let i = 0; i < n; i++) stepMotor(run, params);
+      BUS.emit('change', { run, params, ccaaActiva, modo });
+    },
+    setParam(k, v) { params[k] = v; BUS.emit('change', { run, params, ccaaActiva, modo }); },
+    reset() {
+      run = estadoInicial(run.preset);
+      ccaaActiva = null;
+      BUS.emit('change', { run, params, ccaaActiva, modo });
+    },
+    seleccionar(id) {
+      ccaaActiva = (ccaaActiva === id) ? null : id;
+      BUS.emit('change', { run, params, ccaaActiva, modo });
+    },
+    setModo(m) { modo = m; BUS.emit('change', { run, params, ccaaActiva, modo }); },
+    perturbar(tipo) {
+      aplicarPerturbacion(run, params, tipo);
+      BUS.emit('change', { run, params, ccaaActiva, modo });
+    },
+    inicializar() { run = estadoInicial('C'); },
+  };
+})();
+
+/* ============================================================================
+   SECCIÓN 4 · CAPAS SISTÉMICAS
+   ============================================================================ */
+function stepCapas(ccaa, params, run) {
+  const vG = params.velocidadGaia, vE = params.velocidadEco,
+        vC = params.velocidadCapt, vS = params.velocidadSubj;
+  const iaActiva = run.perturbacionesActivas.find(p => p.tipo === 'ia' && p.turnosRestantes > 0);
+  const multIA = iaActiva ? 1.3 : 1;
+
+  // Densidad: habitantes por unidad de "capacidad" del territorio.
+  // Modula la presión sobre los recursos y la subjetividad.
+  const densidad = ccaa.poblacion / ccaa.poblacionInicial;
+  const presionDemografica = clamp(densidad, 0.5, 2);
+
+  // ---- RECURSOS ----
+  const salud = clamp(1 - ccaa.capas.gaia.temp / 3, 0, 1);
+  const capRenov = 800 + ccaa.tejido.agro * 1500;
+  ccaa.recursos.renovables.capacidad = capRenov;
+  const regen = ccaa.recursos.renovables.capacidad * ccaa.recursos.renovables.tasaBase * salud * vE;
+  ccaa.recursos.renovables.stock = clamp(
+    ccaa.recursos.renovables.stock + regen, 0, ccaa.recursos.renovables.capacidad);
+  // Extracción proporcional a capital Y población (más gente = más consumo).
+  const extraccionRenov = (ccaa.capas.eco.capital * 0.5 + ccaa.poblacion * 0.02) * vE * presionDemografica;
+  ccaa.recursos.renovables.stock = Math.max(0, ccaa.recursos.renovables.stock - extraccionRenov);
+
+  const extraccionNoRenov = ccaa.recursos.noRenovables.tasaExtraccion
+    * ccaa.capas.eco.capital * vE * presionDemografica;
+  ccaa.recursos.noRenovables.stock = Math.max(0, ccaa.recursos.noRenovables.stock - extraccionNoRenov);
+
+  // ---- ENERGÍA ----
+  const energia = ccaa.recursos.energia;
+  if (energia.turnosEstabilizando > 0) {
+    energia.turnosEstabilizando--;
+    if (energia.turnosEstabilizando === 0) {
+      energia.eroi = 30;
+      energia.emisiones = 0.02;
+    }
+  }
+
+  // ---- GAIA ----
+  const g = ccaa.capas.gaia;
+  const emisiones = ccaa.capas.eco.produccion * params.factorExtraccion * energia.emisiones;
+  g.co2 = g.co2 + (emisiones - params.emisionesBase) * vG * multIA;
+  const forzamiento = ((g.co2 - 280) * params.absorcionCo2) * vG;
+  g.temp = clamp(g.temp + forzamiento - g.temp * 0.005, -1, 5);
+  const factorPerma = umbral(g.temp, 2, 0.3);
+  g.permafrost = clamp(g.permafrost - factorPerma * 2 * vG, 0, 100);
+
+  // ---- ECONOMÍA ----
+  const e = ccaa.capas.eco;
+  const dispRenov = ccaa.recursos.renovables.stock / Math.max(1, ccaa.recursos.renovables.capacidad);
+  const dispNoRenov = ccaa.recursos.noRenovables.stock / Math.max(1, ccaa.recursos.noRenovables.capacidad);
+  const disponibilidad = 0.5 + 0.5 * (dispRenov * 0.6 + dispNoRenov * 0.4);
+  const eficienciaEnergetica = clamp(energia.eroi / 10, 0.1, 2);
+  // Producción escala con población activa (sqrt para no explotar).
+  const factorPoblacion = Math.sqrt(ccaa.poblacion / 500);
+  const produccionBase = e.capital * disponibilidad * eficienciaEnergetica
+    * (1 + ccaa.tejido.industria) * factorPoblacion * params.factorExtraccion;
+  e.produccion = produccionBase;
+  const reinversion = e.produccion * 0.15 * vE;
+  const depreciacion = e.capital * 0.02 * vE;
+  e.capital = Math.max(0, e.capital + reinversion - depreciacion);
+
+  // ---- CAPTURA ----
+  const c = ccaa.capas.capt;
+  c.control = clamp(c.control + c.control * 0.01 * vC * multIA, 0, 1);
+  c.filtro = clamp(c.control * 0.8, 0, 0.9);
+  c.narrativa = clamp(c.narrativa * params.decaimientoNarrativa
+    + umbral(g.temp, 1.5) * 40 * vC, 0, 100);
+
+  // ---- SUBJETIVIDAD ----
+  const s = ccaa.capas.subj;
+  const carga = Math.sqrt(Math.max(e.capital, 0.1)) * params.factorCargaCapital * presionDemografica;
+  const alivio = s.sentido * 0.05;
+  s.burnout = clamp(s.burnout + (carga - alivio) * vS, 0, 100);
+  s.confianza = clamp(s.confianza * params.decaimientoConfianza
+    + (1 - c.filtro) * 20 * vS, 0, 100);
+  s.sentido = clamp(s.sentido * 0.98 + e.produccion * 0.02 * vS - s.burnout * 0.02 * vS, 0, 100);
+
+  // ---- TEJIDO ----
+  const t = ccaa.tejido;
+  const vT = params.velocidadTejido * vE;
+  // Industria crece con capital alto, decae con capital bajo.
+  t.industria = clamp(t.industria + (e.capital > 40 ? vT : -vT * 0.5), 0, 1);
+  // Agro decae con temperatura alta.
+  t.agro = clamp(t.agro - (g.temp > 1.5 ? vT * 0.5 : 0), 0.02, 1);
+  // Extractivo decae con agotamiento.
+  t.extractivo = clamp(t.extractivo
+    - (ccaa.recursos.noRenovables.stock < 100 ? vT * 0.5 : 0), 0, 1);
+  // Servicios crecen con capital y población urbana.
+  t.servicios = clamp(t.servicios + (e.capital > 30 ? vT * 0.5 : 0), 0, 1);
+  // Normalizar para que sumen ~1.
+  const sumaT = t.agro + t.industria + t.servicios + t.extractivo;
+  if (sumaT > 0) {
+    for (const k in t) t[k] = t[k] / sumaT;
+  }
+}
+
+/* ============================================================================
+   SECCIÓN 5 · ATRACTIVO Y MIGRACIÓN
+   ----------------------------------------------------------------------------
+   Cada CCAA tiene un "atractivo" para el migrante. Se calcula a partir de:
+   - Renta per cápita (capital / población).
+   - Bienestar subjetivo (confianza - burnout).
+   - Calidad ambiental (1 - temperatura/3).
+   - Libertad (1 - filtro).
+   - Identidad (para migrantes internos, la afinidad cultural importa).
+   
+   Los flujos son proporcionales a la diferencia de atractivo entre CCAA.
+   Con RETARDO: el flujo del turno t se basa en el atractivo del turno t-2.
+   ============================================================================ */
+function calcularAtractivo(ccaa, params) {
+  const renta = ccaa.capas.eco.capital / Math.max(1, ccaa.poblacion) * 100;
+  const bienestar = (ccaa.capas.subj.confianza - ccaa.capas.subj.burnout) / 100;
+  const ambiente = clamp(1 - ccaa.capas.gaia.temp / 3, 0, 1);
+  const libertad = 1 - ccaa.capas.capt.filtro;
+  // Atractivo = combinación ponderada.
+  return renta * 0.3 + bienestar * 0.25 + ambiente * 0.25 + libertad * 0.2;
+}
+
+function calcularMigracion(run, params) {
+  if (!params.migracionActiva) return [];
+  const ccaas = Object.values(run.ccaas);
+  // 1. Calcular atractivo actual.
+  for (const c of ccaas) {
+    c.atractivo = calcularAtractivo(c, params);
+  }
+  // 2. Usar atractivo con retardo (el del turno t - retardoMigratorio).
+  //    Guardamos el atractivo previo para esto.
+  const flujos = [];
+  const atractivoUsado = {};
+  for (const c of ccaas) {
+    atractivoUsado[c.id] = c.atractivoPrevio || c.atractivo;
+  }
+  // 3. Política migratoria del gobierno actual.
+  let politicaGob = 0;
+  if (run.gobierno) {
+    const coal = run.gobierno.coalicion;
+    const pols = coal.map(id => {
+      const p = run.partidos.find(x => x.id === id);
+      return p ? p.politicaMigratoria : 0;
+    });
+    if (pols.length) politicaGob = pols.reduce((a, b) => a + b, 0) / pols.length;
+  }
+  // La política modula el flujo: positiva = más flujo (fronteras abiertas),
+  // negativa = menos flujo. Pero la migración INTERNA no se ve afectada por
+  // la política exterior; la usamos como modulador de facilidad interna.
+  const modulador = 1 + politicaGob * 0.3;
+
+  // 4. Calcular flujos entre pares.
+  //    Solo consideramos pares con diferencia significativa de atractivo.
+  const ordenados = [...ccaas].sort((a, b) => atractivoUsado[b.id] - atractivoUsado[a.id]);
+  for (let i = 0; i < ordenados.length; i++) {
+    for (let j = i + 1; j < ordenados.length; j++) {
+      const a = ordenados[i];  // más atractiva
+      const b = ordenados[j];  // menos atractiva
+      const dif = atractivoUsado[a.id] - atractivoUsado[b.id];
+      if (dif < 0.05) continue;  // umbral mínimo
+      // Flujo proporcional a la diferencia y al tamaño de la población de b.
+      const flujo = Math.min(
+        b.poblacion * 0.01,
+        dif * params.velocidadMigracion * b.poblacion * 0.1 * modulador
+      );
+      if (flujo < 0.5) continue;
+      flujos.push({ desde: b.id, hacia: a.id, cantidad: flujo });
+    }
+  }
+  // 5. Aplicar flujos, limitando a la población disponible.
+  const deltas = {};
+  for (const c of ccaas) deltas[c.id] = 0;
+  for (const f of flujos) {
+    const desde = run.ccaas[f.desde];
+    const disp = desde.poblacion - deltas[f.desde];
+    const real = Math.min(f.cantidad, disp * 0.1);
+    if (real < 0.1) continue;
+    deltas[f.desde] -= real;
+    deltas[f.hacia] += real;
+    f.cantidad = real;
+  }
+  // 6. Aplicar deltas.
+  for (const c of ccaas) {
+    c.migracionNeta = deltas[c.id];
+    c.poblacion = Math.max(50, c.poblacion + deltas[c.id]);
+    // Actualizar atractivo previo para el retardo.
+    c.atractivoPrevio = c.atractivo;
+  }
+  // 7. Devolver los flujos más significativos.
+  return flujos.sort((a, b) => b.cantidad - a.cantidad).slice(0, 10);
+}
+
+/* ============================================================================
+   SECCIÓN 6 · COHERENCIA
+   ============================================================================ */
+function coherenciaCCAA(ccaa) {
+  const g = ccaa.capas.gaia, e = ccaa.capas.eco,
+        c = ccaa.capas.capt, s = ccaa.capas.subj;
+  const M = clamp((e.capital / 50) * (ccaa.recursos.renovables.stock / 1000), 0, 1);
+  const S = clamp((s.confianza / 100) * (1 - c.filtro), 0, 1);
+  const I = clamp((g.temp / 3) + (s.burnout / 200), 0, 3);
+  const fI = I <= 1 ? I : Math.exp(-0.5 * Math.pow(I - 1, 2));
+  return { M, S, I, fI, total: M * S * fI };
+}
+
+/* ============================================================================
+   SECCIÓN 7 · VOTO
+   ============================================================================ */
+function calcularVoto(ccaa, partidos, params) {
+  const g = ccaa.capas.gaia, e = ccaa.capas.eco,
+        c = ccaa.capas.capt, s = ccaa.capas.subj;
+  const estado = {
+    gaia: clamp(1 - g.temp / 3, -1, 1),
+    eco:  clamp((e.capital / 50) - 0.5, -1, 1),
+    capt: clamp(1 - c.filtro, -1, 1),
+    subj: clamp((s.confianza / 100) - 0.3, -1, 1),
+  };
+  const puntuaciones = {};
+  const desglose = {};
+  let total = 0;
+  for (const p of partidos) {
+    let scoreEstado = 0;
+    const porCapa = {};
+    for (const k in p.programa) {
+      const contrib = p.programa[k] * estado[k];
+      porCapa[k] = contrib;
+      scoreEstado += contrib;
+    }
+    const estadoNorm = (scoreEstado + 2) / 4;
+    const mem = ccaa.memoria[p.id] || 0;
+    const memNorm = (mem + 1) / 2;
+    // Bonus territorial: si el partido es territorial de esta CCAA, bonus.
+    const esTerritorial = p.territorial === ccaa.id;
+    const bonusTerritorial = esTerritorial
+      ? ccaa.identidad.periferica * 0.4
+      : 0;
+    const baseComp = p.base;
+    const ruido = ((hash(ccaa.id + p.id) % 100) - 50) / 1000 * params.fuerzaRuido;
+    let score = estadoNorm * params.pesoEstadoVoto
+              + baseComp * params.pesoPrograma
+              + memNorm * params.pesoMemoria
+              + bonusTerritorial * params.pesoIdentidad;
+    score *= (1 + ruido);
+    score = Math.max(0.001, score);
+    puntuaciones[p.id] = score;
+    desglose[p.id] = { porCapa, scoreEstado, estadoNorm, baseComp, mem, ruido,
+      bonusTerritorial, score };
+    total += score;
+  }
+  const voto = {};
+  for (const id in puntuaciones) voto[id] = puntuaciones[id] / total;
+  return { voto, desglose, estado };
+}
+
+/* ============================================================================
+   SECCIÓN 8 · D'HONDT
+   ============================================================================ */
+function dhondt(voto, escanos, umbralDH = 0.03) {
+  const cocientes = [];
+  for (const [p, v] of Object.entries(voto)) {
+    if (v < umbralDH) continue;
+    for (let i = 0; i < escanos; i++) cocientes.push({ p, v: v / (i + 1) });
+  }
+  cocientes.sort((a, b) => b.v - a.v);
+  const res = {};
+  for (let i = 0; i < escanos && i < cocientes.length; i++) {
+    res[cocientes[i].p] = (res[cocientes[i].p] || 0) + 1;
+  }
+  return res;
+}
+
+/* ============================================================================
+   SECCIÓN 9 · ELECCIONES
+   ============================================================================ */
+function ejecutarElecciones(run, params) {
+  const totales = {};
+  for (const ccaa of Object.values(run.ccaas)) {
+    // Partidos presentes: base + territoriales de esta CCAA + actor local.
+    const partidosAqui = run.partidos
+      .filter(p => !p.territorial || p.territorial === ccaa.id)
+      .map(p => ({ ...p, programa: { ...p.programa } }));
+    if (ccaa.actorLocal) {
+      partidosAqui.push({
+        id: ccaa.actorLocal.id,
+        nombre: ccaa.actorLocal.nombre,
+        color: ccaa.actorLocal.color,
+        programa: ccaa.actorLocal.programa,
+        base: ccaa.actorLocal.base,
+      });
+    }
+    const { voto, desglose, estado } = calcularVoto(ccaa, partidosAqui, params);
+    ccaa.ultimoVoto = voto;
+    ccaa.ultimoDesglose = desglose;
+    ccaa.estadoSnapshot = estado;
+    const reparto = dhondt(voto, ccaa.escanos, params.umbralDHondt);
+    for (const [p, n] of Object.entries(reparto)) {
+      totales[p] = (totales[p] || 0) + n;
+    }
+  }
+  for (const p of run.partidos) p.escaños = totales[p.id] || 0;
+  // Actualizar memoria.
+  for (const ccaa of Object.values(run.ccaas)) {
+    for (const p of Object.keys(ccaa.ultimoVoto)) {
+      const votoActual = ccaa.ultimoVoto[p];
+      const votoPrevio = ccaa.ultimoVotoPrevio?.[p] || votoActual;
+      const delta = votoActual - votoPrevio;
+      ccaa.memoria[p] = clamp((ccaa.memoria[p] || 0) + delta * 3, -1, 1);
+      ccaa.memoria[p] *= params.memoriaDecay;
+    }
+    ccaa.ultimoVotoPrevio = { ...ccaa.ultimoVoto };
+  }
+  // Formar gobierno.
+  const coalicion = formarGobierno(totales, run, params);
+  if (coalicion) {
+    run.gobierno = {
+      coalicion: coalicion.map(id => id),
+      turnoInicio: run.turno,
+      politicas: [],
+      legitimidad: 0.6,
+      instituciones: { justicia: 0.3, medios: 0.3, admin: 0.3 },
+    };
+    run.log.push({ turno: run.turno, tipo: 'elecciones', categoria: 'gob',
+      detalle: `▶ Gobierno formado: ${coalicion.map(id => {
+        const p = run.partidos.find(x => x.id === id);
+        return p ? p.nombre : 'Emerg';
+      }).join(' + ')}` });
+  } else {
+    run.gobierno = null;
+    run.log.push({ turno: run.turno, tipo: 'elecciones', categoria: 'warn',
+      detalle: `▶ Sin mayoría. Bloqueo institucional.` });
+  }
+  // Log del reparto.
+  const partes = Object.entries(totales).filter(([, n]) => n > 0)
+    .sort((a, b) => b[1] - a[1]).slice(0, 6)
+    .map(([id, n]) => {
+      const p = run.partidos.find(x => x.id === id);
+      return `${p ? p.nombre : 'Emerg'}:${n}`;
+    });
+  run.log.push({ turno: run.turno, tipo: 'reparto', categoria: 'elec',
+    detalle: `Escaños: ${partes.join(' · ')}` });
+  return { totales };
+}
+
+function formarGobierno(totales, run, params) {
+  const UMBRAL_MAYORIA = 176;
+  const partidosOrden = Object.entries(totales)
+    .filter(([, n]) => n > 0)
+    .sort((a, b) => b[1] - a[1]);
+  if (partidosOrden[0]?.[1] >= UMBRAL_MAYORIA) {
+    return [partidosOrden[0][0]];
+  }
+  const candidatos = partidosOrden.map(([id]) => id);
+  const partidoBase = candidatos[0];
+  const pBase = run.partidos.find(p => p.id === partidoBase);
+  if (!pBase) return null;
+  const resto = candidatos.slice(1).map(id => {
+    const p = run.partidos.find(x => x.id === id);
+    if (!p) return { id, afinidad: 0 };
+    let afin = 0;
+    for (const k in pBase.programa) {
+      afin -= Math.abs(pBase.programa[k] - p.programa[k]);
+    }
+    return { id, afinidad: afin };
+  }).sort((a, b) => b.afinidad - a.afinidad);
+  let coalicion = [partidoBase];
+  let suma = totales[partidoBase] || 0;
+  for (const c of resto) {
+    if (suma >= UMBRAL_MAYORIA) break;
+    coalicion.push(c.id);
+    suma += totales[c.id] || 0;
+  }
+  return suma >= UMBRAL_MAYORIA ? coalicion : null;
+}
+
+/* ============================================================================
+   SECCIÓN 10 · GOBIERNO
+   ============================================================================ */
+function aplicarGobierno(run, params) {
+  if (!run.gobierno) return;
+  const coalicion = run.gobierno.coalicion;
+  const progMedio = { gaia:0, eco:0, capt:0, subj:0 };
+  let n = 0;
+  for (const id of coalicion) {
+    const p = run.partidos.find(x => x.id === id);
+    if (!p) continue;
+    for (const k in p.programa) progMedio[k] += p.programa[k];
+    n++;
+  }
+  if (n === 0) return;
+  for (const k in progMedio) progMedio[k] /= n;
+  const fuerza = 0.02;
+  for (const ccaa of Object.values(run.ccaas)) {
+    const leg = run.gobierno.legitimidad;
+    ccaa.capas.gaia.temp += progMedio.gaia * -fuerza * leg;
+    ccaa.capas.capt.control = clamp(ccaa.capas.capt.control
+      + progMedio.capt * fuerza * leg, 0, 1);
+    ccaa.capas.subj.confianza = clamp(ccaa.capas.subj.confianza
+      + progMedio.subj * fuerza * 30 * leg, 0, 100);
+    ccaa.capas.eco.capital = Math.max(0,
+      ccaa.capas.eco.capital + progMedio.eco * fuerza * 5 * leg);
+  }
+  const inst = run.gobierno.instituciones;
+  const tasa = params.capturaInstitucionalPorTurno;
+  inst.justicia = clamp(inst.justicia + tasa, 0, 1);
+  inst.medios = clamp(inst.medios + tasa, 0, 1);
+  inst.admin = clamp(inst.admin + tasa, 0, 1);
+  const capturaMedia = (inst.justicia + inst.medios + inst.admin) / 3;
+  run.gobierno.legitimidad = clamp(0.6 - capturaMedia * 0.4, 0, 1);
+}
+
+/* ============================================================================
+   SECCIÓN 11 · ACTORES EMERGENTES
+   ----------------------------------------------------------------------------
+   Emergen cuando coherencia baja durante N turnos.
+   Desaparecen cuando se cumple la condición de desaparición del tipo.
+   ============================================================================ */
+function checkActores(run, params) {
+  if (!params.actoresEmergentes) return;
+  for (const ccaa of Object.values(run.ccaas)) {
+    const coh = coherenciaCCAA(ccaa);
+    // Actualizar contador.
+    if (coh.total < params.umbralCoherenciaActor) {
+      ccaa.coherenciaBaja++;
+    } else {
+      ccaa.coherenciaBaja = Math.max(0, ccaa.coherenciaBaja - 1);
+    }
+    // Desaparición de actor existente.
+    if (ccaa.actorLocal) {
+      const tipo = TIPOS_ACTOR[ccaa.actorLocal.tipo];
+      if (tipo && tipo.desaparece(ccaa)) {
+        run.log.push({ turno: run.turno, tipo: 'actor_desaparece', categoria: 'actor',
+          detalle: `◇ Desaparece "${ccaa.actorLocal.nombre}" en ${ccaa.nombre}` });
+        ccaa.actorLocal = null;
+        ccaa.turnoEmergencia = null;
+      }
+      continue;
+    }
+    // Emergencia.
+    if (ccaa.coherenciaBaja >= params.turnosMinimosActor) {
+      const candidatos = Object.entries(TIPOS_ACTOR)
+        .filter(([_, t]) => t.condiciones(ccaa))
+        .map(([id, t]) => ({ id, ...t }));
+      if (candidatos.length === 0) continue;
+      const seed = hash(ccaa.id) + run.turno * 1000;
+      const r = rng(seed);
+      const totalPeso = candidatos.reduce((s, c) => s + c.peso, 0);
+      let x = r() * totalPeso;
+      let elegido = candidatos[0];
+      for (const c of candidatos) {
+        x -= c.peso;
+        if (x <= 0) { elegido = c; break; }
+      }
+      ccaa.actorLocal = {
+        id: 'emerg_' + ccaa.id,
+        nombre: elegido.nombre,
+        color: elegido.color,
+        programa: { ...elegido.programa },
+        base: elegido.base,
+        tipo: elegido.id,
+      };
+      ccaa.turnoEmergencia = run.turno;
+      run.log.push({ turno: run.turno, tipo: 'actor_local', categoria: 'actor',
+        detalle: `◆ Emerge "${elegido.nombre}" en ${ccaa.nombre} · coh ${fmt(coh.total, 3)}` });
+    }
+  }
+  const conActor = Object.values(run.ccaas).filter(c => c.actorLocal).length;
+  if (conActor >= params.ccaaParaGlobal && run.actoresGlobales.length === 0) {
+    run.actoresGlobales.push({ tipo: 'global', turno: run.turno });
+    run.log.push({ turno: run.turno, tipo: 'actor_global', categoria: 'actor',
+      detalle: `◆◆ Actor GLOBAL emerge · ${conActor} CCAA con actor local` });
+  }
+}
+
+/* ============================================================================
+   SECCIÓN 12 · PERTURBACIONES
+   ============================================================================ */
+function aplicarPerturbacion(run, params, tipo) {
+  const p = { tipo, turnosRestantes: 1 };
+  if (tipo === 'shock_eco') {
+    for (const ccaa of Object.values(run.ccaas)) {
+      ccaa.recursos.renovables.stock *= 0.5;
+      ccaa.recursos.noRenovables.stock *= 0.7;
+      ccaa.capas.eco.capital *= 0.7;
+    }
+    run.log.push({ turno: run.turno, tipo: 'perturbacion', categoria: 'warn',
+      detalle: '⚡ Shock económico: recursos -30/-50%, capital -30%' });
+  } else if (tipo === 'shock_clima') {
+    for (const ccaa of Object.values(run.ccaas)) {
+      ccaa.capas.gaia.temp += 0.5;
+      ccaa.capas.gaia.co2 += 50;
+    }
+    run.log.push({ turno: run.turno, tipo: 'perturbacion', categoria: 'warn',
+      detalle: '🌡️ Shock climático: +0.5°C, +50 CO₂' });
+  } else if (tipo === 'captura') {
+    for (const ccaa of Object.values(run.ccaas)) {
+      ccaa.capas.capt.control = clamp(ccaa.capas.capt.control + 0.2, 0, 1);
+      ccaa.capas.capt.filtro = clamp(ccaa.capas.capt.control * 0.8, 0, 0.9);
+    }
+    run.log.push({ turno: run.turno, tipo: 'perturbacion', categoria: 'warn',
+      detalle: '📡 Captura masiva: control +0.2' });
+  } else if (tipo === 'despertar') {
+    for (const ccaa of Object.values(run.ccaas)) {
+      ccaa.capas.subj.confianza = clamp(ccaa.capas.subj.confianza + 20, 0, 100);
+      ccaa.capas.capt.filtro = clamp(ccaa.capas.capt.filtro - 0.15, 0, 0.9);
+    }
+    run.log.push({ turno: run.turno, tipo: 'perturbacion', categoria: 'eco',
+      detalle: '💡 Despertar civil: confianza +20, filtro -0.15' });
+  } else if (tipo === 'nuclear') {
+    for (const ccaa of Object.values(run.ccaas)) {
+      ccaa.recursos.energia.tipo = 'nuclear';
+      ccaa.recursos.energia.turnosEstabilizando = 20;
+      ccaa.recursos.energia.eroi = 5;
+      ccaa.recursos.energia.emisiones = 0.3;
+    }
+    run.log.push({ turno: run.turno, tipo: 'perturbacion', categoria: 'eco',
+      detalle: '⚛️ Transición nuclear: 20 turnos de estabilización' });
+  } else if (tipo === 'ia') {
+    p.turnosRestantes = 20;
+    run.log.push({ turno: run.turno, tipo: 'perturbacion', categoria: 'actor',
+      detalle: '🤖 Emergencia IA: velocidades +30% durante 20 turnos' });
+  }
+  run.perturbacionesActivas.push(p);
+}
+
+function tickPerturbaciones(run) {
+  for (const p of run.perturbacionesActivas) p.turnosRestantes--;
+  run.perturbacionesActivas = run.perturbacionesActivas.filter(p => p.turnosRestantes > 0);
+}
+
+/* ============================================================================
+   SECCIÓN 13 · MOTOR
+   ============================================================================ */
+function stepMotor(run, params) {
+  run.turno++;
+
+  // 1. Capas.
+  for (const ccaa of Object.values(run.ccaas)) {
+    stepCapas(ccaa, params, run);
+    if (run.turno % 2 === 0) {
+      const coh = coherenciaCCAA(ccaa);
+      ccaa.historial.push({
+        turno: run.turno, temp: ccaa.capas.gaia.temp,
+        capital: ccaa.capas.eco.capital,
+        renovables: ccaa.recursos.renovables.stock,
+        poblacion: ccaa.poblacion,
+        filtro: ccaa.capas.capt.filtro,
+        burnout: ccaa.capas.subj.burnout,
+        coherencia: coh.total,
+      });
+      if (ccaa.historial.length > 100) ccaa.historial.shift();
+    }
+  }
+
+  // 2. Actores.
+  checkActores(run, params);
+
+  // 3. Perturbaciones.
+  tickPerturbaciones(run);
+
+  // 4. Elecciones.
+  if (run.turno % params.relojElectoral === 0) {
+    ejecutarElecciones(run, params);
+    run.relojElectoral = 0;
+  } else {
+    run.relojElectoral++;
+  }
+
+  // 5. Gobierno.
+  aplicarGobierno(run, params);
+
+  // 6. Migración.
+  if (run.turno % params.relojMigratorio === 0) {
+    const flujos = calcularMigracion(run, params);
+    run.flujosRecientes = flujos;
+    if (flujos.length > 0) {
+      const total = flujos.reduce((s, f) => s + f.cantidad, 0);
+      run.log.push({ turno: run.turno, tipo: 'migracion', categoria: 'migr',
+        detalle: `⇄ Migración: ${fmt(total, 0)}k personas en ${flujos.length} rutas` });
+    }
+    run.relojMigratorio = 0;
+  } else {
+    run.relojMigratorio++;
+  }
+
+  // 7. Reloj ecológico.
+  if (run.turno % params.relojEcologico === 0) {
+    run.log.push({ turno: run.turno, tipo: 'reloj_eco', categoria: 'eco',
+      detalle: '◉ Ciclo ecológico mayor' });
+    run.relojEcologico = 0;
+  } else {
+    run.relojEcologico++;
+  }
+
+  // 8. Historial nacional.
+  const ccaas = Object.values(run.ccaas);
+  const avg = (fn) => ccaas.reduce((s, c) => s + fn(c), 0) / ccaas.length;
+  const cohMedia = avg(c => coherenciaCCAA(c).total);
+  const hist = {
+    turno: run.turno, coherencia: cohMedia,
+    temp: avg(c => c.capas.gaia.temp),
+    capital: avg(c => c.capas.eco.capital),
+    renovables: avg(c => c.recursos.renovables.stock),
+    poblacion: avg(c => c.poblacion),
+    filtro: avg(c => c.capas.capt.filtro),
+    burnout: avg(c => c.capas.subj.burnout),
+  };
+  run.historialNacional.push(hist);
+  if (run.historialNacional.length > 200) run.historialNacional.shift();
+}
+
+/* ============================================================================
+   SECCIÓN 14 · RENDER
+   ============================================================================ */
+
+const Mapa = (() => {
+  const R = 26, ANCHO = Math.sqrt(3) * R, ALTO = 1.5 * R, PAD = 25;
+  function pos(c) {
+    const off = (c.fila % 2) ? ANCHO / 2 : 0;
+    return { x: PAD + c.col * ANCHO + off + ANCHO / 2,
+             y: PAD + c.fila * ALTO + ALTO / 2 };
+  }
+  function hexPts(cx, cy, r) {
+    const pts = [];
+    for (let i = 0; i < 6; i++) {
+      const a = Math.PI / 180 * (60 * i - 30);
+      pts.push(`${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`);
+    }
+    return pts.join(' ');
+  }
+  function colorCCAA(ccaa, partidos) {
+    const voto = ccaa.ultimoVoto;
+    if (!voto || !Object.keys(voto).length) return '#1c2330';
+    let best = null, bestV = 0;
+    for (const [id, v] of Object.entries(voto)) {
+      if (v > bestV) { bestV = v; best = id; }
+    }
+    const p = partidos.find(x => x.id === best);
+    if (p) return p.color;
+    if (ccaa.actorLocal && ccaa.actorLocal.id === best) return ccaa.actorLocal.color;
+    return '#c084fc';
+  }
+  function render(run, ccaaActiva) {
+    const el = document.getElementById('mapa');
+    const ccaas = Object.values(run.ccaas);
+    let maxX = 0, maxY = 0;
+    for (const c of ccaas) {
+      const p = pos(c);
+      if (p.x + R > maxX) maxX = p.x + R;
+      if (p.y + R > maxY) maxY = p.y + R;
+    }
+    const w = maxX + PAD, h = maxY + PAD;
+    let svg = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet">`;
+    for (const c of ccaas) {
+      const p = pos(c);
+      const col = colorCCAA(c, run.partidos);
+      const act = c.id === ccaaActiva ? ' activa' : '';
+      svg += `<polygon class="hex${act}" data-id="${c.id}"
+        points="${hexPts(p.x, p.y, R)}" fill="${col}"/>`;
+      svg += `<text class="hex-label" x="${p.x}" y="${p.y}">${c.nombre}</text>`;
+      if (c.actorLocal) {
+        svg += `<circle class="actor-mark" cx="${p.x + R * 0.75}"
+          cy="${p.y - R * 0.75}" r="5"/>`;
+      }
+    }
+    svg += '</svg>';
+    el.innerHTML = svg;
+    el.querySelectorAll('.hex').forEach(hex => {
+      hex.onclick = () => Estado.seleccionar(hex.dataset.id);
+    });
+  }
+  return { render };
+})();
+
+const DetalleCCAA = (() => {
+  function render(run, ccaaId, params) {
+    const el = document.getElementById('ccaa-detalle');
+    const titulo = document.getElementById('ccaa-titulo');
+    if (!ccaaId) {
+      titulo.innerHTML = 'Detalle de CCAA <span class="hint">selecciona una en el mapa o la tabla</span>';
+      el.innerHTML = '<div style="color:var(--apagado);font-size:12px;">Sin selección.</div>';
+      return;
+    }
+    const c = run.ccaas[ccaaId];
+    if (!c) return;
+    const coh = coherenciaCCAA(c);
+    const colGaia = c.capas.gaia.temp < 1.5 ? 'var(--ok)' : c.capas.gaia.temp < 2.5 ? 'var(--warn)' : 'var(--bad)';
+    const colCoh = coh.total > 0.3 ? 'var(--ok)' : coh.total > 0.1 ? 'var(--warn)' : 'var(--bad)';
+    titulo.innerHTML = `Detalle de <span style="color:var(--acento)">${c.nombre}</span>
+      <span class="hint">${c.escanos} escaños · ${fmt(c.poblacion, 0)}k hab · identidad periférica: ${fmt(c.identidad.periferica, 2)}</span>`;
+    let html = '';
+
+    // Diagnóstico actor.
+    html += renderDiagnosticoActor(c, params, coh);
+
+    // Estado por capa.
+    html += '<div class="estado-grid">';
+    html += `<div class="estado-cap" style="border-color:var(--gaia)">
+      <div class="titulo">🌍 Gaia</div>
+      <div class="valor" style="color:${colGaia}">${fmt(c.capas.gaia.temp, 2)}°C</div>
+      <div class="sub">CO₂ ${fmt(c.capas.gaia.co2, 0)}</div>
+      <div class="sub">Perma ${fmt(c.capas.gaia.permafrost, 0)}%</div>
+    </div>
+    <div class="estado-cap" style="border-color:var(--eco)">
+      <div class="titulo">⚙️ Economía</div>
+      <div class="valor">${fmt(c.capas.eco.capital, 1)}</div>
+      <div class="sub">Prod ${fmt(c.capas.eco.produccion, 1)}</div>
+      <div class="sub">EROI ${fmt(c.recursos.energia.eroi, 1)}</div>
+    </div>
+    <div class="estado-cap" style="border-color:var(--capt)">
+      <div class="titulo">🪙 Captura</div>
+      <div class="valor">${fmt(c.capas.capt.filtro, 2)}</div>
+      <div class="sub">Control ${fmt(c.capas.capt.control, 2)}</div>
+      <div class="sub">Narrativa ${fmt(c.capas.capt.narrativa, 0)}</div>
+    </div>
+    <div class="estado-cap" style="border-color:var(--subj)">
+      <div class="titulo">🧠 Subjetividad</div>
+      <div class="valor">${fmt(c.capas.subj.burnout, 0)}</div>
+      <div class="sub">Confianza ${fmt(c.capas.subj.confianza, 0)}</div>
+      <div class="sub">Sentido ${fmt(c.capas.subj.sentido, 0)}</div>
+    </div>`;
+    html += '</div>';
+
+    // Población y migración.
+    const deltaMig = c.migracionNeta || 0;
+    const pctPob = (c.poblacion / c.poblacionInicial - 1) * 100;
+    const colMig = deltaMig > 1 ? 'var(--ok)' : deltaMig < -1 ? 'var(--bad)' : 'var(--apagado)';
+    html += `<div style="background:var(--panel-2);padding:8px;border-radius:4px;margin:8px 0;font-size:11px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+      <div>
+        <div style="color:var(--apagado);font-size:10px;">POBLACIÓN</div>
+        <div style="font-weight:700;font-size:14px;">${fmt(c.poblacion, 0)}k</div>
+        <div style="font-size:10px;color:${pctPob > 5 ? 'var(--ok)' : pctPob < -5 ? 'var(--bad)' : 'var(--apagado)'};">
+          ${pctPob > 0 ? '+' : ''}${fmt(pctPob, 1)}% desde inicio
+        </div>
+      </div>
+      <div>
+        <div style="color:var(--apagado);font-size:10px;">MIGRACIÓN NETA</div>
+        <div style="font-weight:700;font-size:14px;color:${colMig};">${deltaMig > 0 ? '+' : ''}${fmt(deltaMig, 1)}k</div>
+        <div style="font-size:10px;color:var(--apagado);">último ciclo</div>
+      </div>
+      <div>
+        <div style="color:var(--apagado);font-size:10px;">ATRACTIVO</div>
+        <div style="font-weight:700;font-size:14px;">${fmt(c.atractivo, 2)}</div>
+        <div style="font-size:10px;color:var(--apagado);">renta+bienestar+ambiente</div>
+      </div>
+    </div>`;
+
+    // Recursos.
+    const r = c.recursos;
+    const pctRen = r.renovables.stock / Math.max(1, r.renovables.capacidad);
+    const pctNoRen = r.noRenovables.stock / Math.max(1, r.noRenovables.capacidad);
+    html += `<div style="margin-top:8px;font-size:11px;color:var(--apagado);">Recursos</div>`;
+    html += '<div class="recursos-grid">';
+    html += `<div class="recurso">
+      <div class="nombre">🌾 Renovables</div>
+      <div class="val">${fmt(r.renovables.stock, 0)} / ${fmt(r.renovables.capacidad, 0)}</div>
+      <div class="barra"><div style="width:${pctRen * 100}%;background:var(--ok)"></div></div>
+    </div>
+    <div class="recurso">
+      <div class="nombre">⛏️ No renovables</div>
+      <div class="val">${fmt(r.noRenovables.stock, 0)} / ${fmt(r.noRenovables.capacidad, 0)}</div>
+      <div class="barra"><div style="width:${pctNoRen * 100}%;background:var(--warn)"></div></div>
+    </div>
+    <div class="recurso">
+      <div class="nombre">⚡ Energía</div>
+      <div class="val">EROI ${fmt(r.energia.eroi, 1)}</div>
+      <div class="barra"><div style="width:${clamp(r.energia.eroi / 30, 0, 1) * 100}%;background:var(--eco)"></div></div>
+      <div style="font-size:9px;color:#556;margin-top:2px;">
+        ${r.energia.turnosEstabilizando > 0 ? `Estabilizando ${r.energia.turnosEstabilizando}t` : r.energia.tipo}
+      </div>
+    </div>`;
+    html += '</div>';
+
+    // Tejido con evolución.
+    html += `<div style="margin-top:8px;font-size:11px;color:var(--apagado);">Tejido productivo</div>`;
+    html += '<div class="tejido-grid">';
+    const tejidoKeys = ['agro','industria','servicios','extractivo'];
+    const iconos = { agro:'🌾', industria:'⚙️', servicios:'🏙️', extractivo:'⛏️' };
+    for (const k of tejidoKeys) {
+      const v = c.tejido[k];
+      const prev = c.tejidoPrevio?.[k] ?? v;
+      const delta = v - prev;
+      const colDelta = delta > 0.001 ? 'var(--ok)' : delta < -0.001 ? 'var(--bad)' : 'var(--apagado)';
+      html += `<div class="tejido">
+        <div class="nombre">${iconos[k]} ${k}</div>
+        <div class="val">${fmt(v, 2)}</div>
+        <div class="delta" style="color:${colDelta}">${delta > 0 ? '+' : ''}${fmt(delta, 3)}</div>
+      </div>`;
+    }
+    html += '</div>';
+    // Actualizar tejidoPrevio.
+    c.tejidoPrevio = { ...c.tejido };
+
+    // Coherencia.
+    html += `<div style="background:var(--panel-2);padding:8px;border-radius:4px;margin:10px 0;font-family:ui-monospace,monospace;font-size:11px;">
+      <div style="color:var(--apagado);margin-bottom:4px;">Coherencia = M · S · f(I)</div>
+      <div>M = <strong style="color:${colCoh}">${fmt(coh.M, 3)}</strong> (capital · renovables)</div>
+      <div>S = <strong style="color:${colCoh}">${fmt(coh.S, 3)}</strong> (confianza · (1-filtro))</div>
+      <div>I = ${fmt(coh.I, 2)} → f(I)=<strong style="color:${colCoh}">${fmt(coh.fI, 3)}</strong></div>
+      <div style="margin-top:4px;border-top:1px solid var(--borde);padding-top:4px;">
+        Total = <strong style="color:${colCoh};font-size:14px;">${fmt(coh.total, 3)}</strong>
+      </div>
+    </div>`;
+
+    // Voto.
+    if (c.ultimoVoto && Object.keys(c.ultimoVoto).length) {
+      html += `<div style="margin-top:12px;font-size:11px;color:var(--apagado);margin-bottom:6px;">
+        Desglose del voto
+      </div>`;
+      html += '<div class="voto-desglose">';
+      const votoOrden = Object.entries(c.ultimoVoto).sort((a, b) => b[1] - a[1]);
+      for (const [id, pctVal] of votoOrden.slice(0, 8)) {
+        const part = run.partidos.find(p => p.id === id);
+        let color, nombre;
+        if (part) { color = part.color; nombre = part.nombre + (part.territorial ? ' (terr)' : ''); }
+        else if (c.actorLocal && c.actorLocal.id === id) {
+          color = c.actorLocal.color; nombre = c.actorLocal.nombre;
+        } else { color = '#c084fc'; nombre = 'Emerg'; }
+        const d = c.ultimoDesglose[id] || {};
+        const ancho = (pctVal / votoOrden[0][1]) * 100;
+        html += `<div class="voto-fila" style="border-left-color:${color}">
+          <span class="nombre" style="color:${color}">${nombre}</span>
+          <span class="pct">${pct(pctVal)}</span>
+          <div class="barra"><div style="width:${ancho}%;background:${color}"></div></div>
+          <span class="score" title="terr: ${fmt(d.bonusTerritorial || 0, 2)}">${fmt(d.score, 3)}</span>
+        </div>`;
+      }
+      html += '</div>';
+    }
+    el.innerHTML = html;
+  }
+
+  function renderDiagnosticoActor(c, params, coh) {
+    if (c.actorLocal) {
+      const tipo = TIPOS_ACTOR[c.actorLocal.tipo];
+      const desaparece = tipo?.desaparece(c);
+      return `<div style="padding:10px;border-radius:4px;margin:8px 0;font-size:12px;
+        background:rgba(192,132,252,0.15);border-left:3px solid var(--emerg);line-height:1.5;">
+        <div style="font-weight:600;margin-bottom:4px;">◆ ${c.actorLocal.nombre}</div>
+        Tipo: <strong>${c.actorLocal.tipo}</strong> · Emergió T${c.turnoEmergencia}<br>
+        Coherencia actual: <strong>${fmt(coh.total, 3)}</strong>
+        ${desaparece ? '<br><span style="color:var(--ok);">✓ Condiciones de desaparición cumplidas</span>' : ''}
+      </div>`;
+    }
+    const umbralCoh = params.umbralCoherenciaActor;
+    const turnosMin = params.turnosMinimosActor;
+    const bajo = coh.total < umbralCoh;
+    const clase = bajo ? 'background:rgba(210,153,34,0.1);border-left:3px solid var(--warn);'
+                       : 'background:rgba(63,185,80,0.1);border-left:3px solid var(--ok);';
+    let detalle = '';
+    if (bajo) {
+      const pctProg = (c.coherenciaBaja / turnosMin) * 100;
+      // Candidatos: qué tipos cumplen condiciones.
+      const candidatos = Object.entries(TIPOS_ACTOR)
+        .filter(([_, t]) => t.condiciones(c))
+        .map(([id, t]) => t.nombre);
+      detalle = `<div>Coherencia: <strong>${fmt(coh.total, 3)}</strong> < umbral ${umbralCoh}</div>
+        <div>Turnos seguidos: <strong>${c.coherenciaBaja}</strong> / ${turnosMin}</div>
+        <div style="height:6px;background:rgba(0,0,0,0.4);border-radius:3px;overflow:hidden;margin:6px 0;">
+          <div style="height:100%;width:${pctProg}%;background:var(--warn);"></div>
+        </div>
+        ${candidatos.length ? `<div style="font-size:10px;color:var(--apagado);">Candidatos: ${candidatos.join(', ')}</div>` : '<div style="font-size:10px;color:var(--bad);">Sin candidatos que cumplan condiciones</div>'}`;
+    } else {
+      detalle = `<div>Coherencia: <strong style="color:var(--ok)">${fmt(coh.total, 3)}</strong> (umbral: ${umbralCoh})</div>`;
+    }
+    return `<div style="padding:10px;border-radius:4px;margin:8px 0;font-size:12px;${clase}line-height:1.5;">
+      <div style="font-weight:600;margin-bottom:4px;">${bajo ? '⚠ Riesgo de actor emergente' : '✓ Sin riesgo'}</div>
+      ${detalle}
+    </div>`;
+  }
+  return { render };
+})();
+
+const GraficaHistorial = (() => {
+  const SERIES = [
+    { key: 'coherencia', label: 'Coherencia', color: '#58a6ff', max: 0.5 },
+    { key: 'temp', label: 'Temperatura', color: '#3fb950', max: 4 },
+    { key: 'capital', label: 'Capital', color: '#d29922', max: 60 },
+    { key: 'renovables', label: 'Renovables', color: '#a371f7', max: 2000 },
+    { key: 'poblacion', label: 'Población', color: '#38bdf8', max: 12000 },
+    { key: 'filtro', label: 'Filtro', color: '#c084fc', max: 0.9 },
+    { key: 'burnout', label: 'Burnout', color: '#f85149', max: 100 },
+  ];
+  function render(run) {
+    const el = document.getElementById('grafica-historial');
+    const legEl = document.getElementById('grafica-leyenda');
+    const hist = run.historialNacional;
+    if (!hist.length) {
+      el.innerHTML = '<div style="color:var(--apagado);font-size:12px;">Sin datos aún.</div>';
+      return;
+    }
+    const W = 800, H = 140, PAD = 20;
+    const n = hist.length;
+    const xStep = (W - PAD * 2) / Math.max(1, n - 1);
+    let svg = `<svg class="grafica-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">`;
+    for (let i = 0; i <= 4; i++) {
+      const y = PAD + (H - PAD * 2) * i / 4;
+      svg += `<line class="grid" x1="${PAD}" y1="${y}" x2="${W - PAD}" y2="${y}"/>`;
+    }
+    for (const s of SERIES) {
+      const puntos = hist.map((h, i) => {
+        const v = clamp(h[s.key] / s.max, 0, 1);
+        return `${(PAD + i * xStep).toFixed(1)},${(H - PAD - v * (H - PAD * 2)).toFixed(1)}`;
+      }).join(' ');
+      svg += `<polyline points="${puntos}" stroke="${s.color}"/>`;
+    }
+    svg += '</svg>';
+    el.innerHTML = svg;
+    const ultimo = hist[hist.length - 1];
+    legEl.innerHTML = SERIES.map(s =>
+      `<span><span class="sw" style="background:${s.color}"></span>
+       ${s.label}: <strong style="color:${s.color}">${fmt(ultimo[s.key], s.max < 1 ? 3 : 0)}</strong></span>`
+    ).join('');
+  }
+  return { render };
+})();
+
+const TablaCCAA = (() => {
+  let ordenKey = 'nombre', ordenDir = 1;
+  function render(run, ccaaActiva) {
+    const tbody = document.getElementById('tabla-ccaa-body');
+    const items = Object.values(run.ccaas).map(c => {
+      const coh = coherenciaCCAA(c);
+      return { id: c.id, nombre: c.nombre, escanos: c.escanos,
+        poblacion: c.poblacion,
+        temp: c.capas.gaia.temp, capital: c.capas.eco.capital,
+        renovables: c.recursos.renovables.stock,
+        filtro: c.capas.capt.filtro, burnout: c.capas.subj.burnout,
+        coherencia: coh.total, actor: !!c.actorLocal };
+    });
+    items.sort((a, b) => {
+      const va = a[ordenKey], vb = b[ordenKey];
+      if (typeof va === 'string') return va.localeCompare(vb) * ordenDir;
+      return (va - vb) * ordenDir;
+    });
+    tbody.innerHTML = items.map(p => {
+      const colCoh = p.coherencia > 0.3 ? 'var(--ok)' : p.coherencia > 0.1 ? 'var(--warn)' : 'var(--bad)';
+      const colTemp = p.temp < 1.5 ? 'var(--ok)' : p.temp < 2.5 ? 'var(--warn)' : 'var(--bad)';
+      const colFil = p.filtro < 0.4 ? 'var(--ok)' : p.filtro < 0.7 ? 'var(--warn)' : 'var(--bad)';
+      const colBur = p.burnout < 30 ? 'var(--ok)' : p.burnout < 60 ? 'var(--warn)' : 'var(--bad)';
+      const act = p.id === ccaaActiva ? ' activa' : '';
+      return `<tr class="${act}" data-id="${p.id}">
+        <td>${p.nombre}${p.actor ? ' ◆' : ''}</td>
+        <td class="num">${p.escanos}</td>
+        <td class="num">${fmt(p.poblacion, 0)}</td>
+        <td class="num" style="color:${colTemp}">${fmt(p.temp, 2)}</td>
+        <td class="num">${fmt(p.capital, 1)}</td>
+        <td class="num">${fmt(p.renovables, 0)}</td>
+        <td class="num" style="color:${colFil}">${fmt(p.filtro, 2)}</td>
+        <td class="num" style="color:${colBur}">${fmt(p.burnout, 0)}</td>
+        <td class="num" style="color:${colCoh}">${fmt(p.coherencia, 3)}</td>
+      </tr>`;
+    }).join('');
+    tbody.querySelectorAll('tr').forEach(tr => {
+      tr.onclick = () => Estado.seleccionar(tr.dataset.id);
+    });
+    document.querySelectorAll('#tabla-ccaa th[data-orden]').forEach(th => {
+      const key = th.dataset.orden;
+      th.onclick = () => {
+        if (ordenKey === key) ordenDir *= -1;
+        else { ordenKey = key; ordenDir = -1; }
+        render(run, ccaaActiva);
+      };
+    });
+  }
+  return { render };
+})();
+
+const Hemiciclo = (() => {
+  function render(run) {
+    const el = document.getElementById('hemiciclo');
+    const leg = document.getElementById('leyenda');
+    const totalesReales = {};
+    for (const c of Object.values(run.ccaas)) {
+      const rep = dhondt(c.ultimoVoto, c.escanos);
+      for (const [pid, n] of Object.entries(rep)) {
+        totalesReales[pid] = (totalesReales[pid] || 0) + n;
+      }
+    }
+    const partidosOrden = Object.entries(totalesReales)
+      .filter(([, n]) => n > 0)
+      .map(([id, n]) => {
+        const p = run.partidos.find(x => x.id === id);
+        const c = Object.values(run.ccaas).find(x => x.actorLocal && x.actorLocal.id === id);
+        const color = p ? p.color : (c ? c.actorLocal.color : '#c084fc');
+        const nombre = p ? p.nombre : (c ? c.actorLocal.nombre : 'Emerg');
+        return { id, nombre, color, n };
+      })
+      .sort((a, b) => a.id.localeCompare(b.id));
+    const W = 500, H = 240, cx = W / 2, cy = H - 12;
+    const rMin = 45, rMax = 190, ARCS = 8;
+    const radios = [];
+    for (let i = 0; i < ARCS; i++) radios.push(rMin + (rMax - rMin) * i / (ARCS - 1));
+    const sumaR = radios.reduce((a, b) => a + b, 0);
+    const totalE = Object.values(totalesReales).reduce((a, b) => a + b, 0) || 1;
+    const porArco = radios.map(r => Math.round(totalE * r / sumaR));
+    let diff = totalE - porArco.reduce((a, b) => a + b, 0);
+    let k = porArco.length - 1;
+    while (diff !== 0 && k >= 0) {
+      const st = Math.sign(diff);
+      porArco[k] += st;
+      diff -= st;
+      k = (k - 1 + porArco.length) % porArco.length;
+    }
+    const cola = [];
+    for (const p of partidosOrden) for (let i = 0; i < p.n; i++) cola.push(p.color);
+    const puntos = [];
+    let idx = 0;
+    for (let i = ARCS - 1; i >= 0; i--) {
+      const r = radios[i]; const n = porArco[i];
+      if (!n) continue;
+      for (let j = 0; j < n; j++) {
+        const theta = Math.PI - Math.PI * (j + 0.5) / n;
+        puntos.push({
+          x: cx + r * Math.cos(theta),
+          y: cy - r * Math.sin(theta),
+          color: cola[idx++] || '#333',
+        });
+      }
+    }
+    let svg = `<svg viewBox="0 0 ${W} ${H}">`;
+    svg += `<line x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy - rMax - 10}"
+      stroke="#fff" stroke-width="1" stroke-dasharray="3,3" opacity="0.25"/>`;
+    for (const p of puntos) {
+      svg += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2.6" fill="${p.color}"/>`;
+    }
+    svg += '</svg>';
+    el.innerHTML = svg;
+    const orden = [...partidosOrden].sort((a, b) => b.n - a.n);
+    leg.innerHTML = orden.map(p =>
+      `<div style="background:var(--panel-2);padding:3px 8px;border-radius:4px;display:flex;gap:5px;align-items:center;font-size:12px;">
+        <div style="width:10px;height:10px;background:${p.color};border-radius:2px;"></div>
+        <span>${p.nombre}</span><strong>${p.n}</strong></div>`
+    ).join('');
+  }
+  return { render };
+})();
+
+function renderGobierno(run) {
+  const el = document.getElementById('gobierno-info');
+  if (!run.gobierno) {
+    el.innerHTML = '<span style="color:var(--warn);">Sin gobierno formado (bloqueo o pre-elecciones).</span>';
+    return;
+  }
+  const g = run.gobierno;
+  const coalicion = g.coalicion.map(id => {
+    const p = run.partidos.find(x => x.id === id);
+    const c = Object.values(run.ccaas).find(x => x.actorLocal && x.actorLocal.id === id);
+    const color = p ? p.color : (c ? c.actorLocal.color : '#c084fc');
+    const nombre = p ? p.nombre : (c ? c.actorLocal.nombre : 'Emerg');
+    return `<span class="tag" style="background:${color}22;color:${color};border:1px solid ${color}">${nombre}</span>`;
+  }).join('');
+  const inst = g.instituciones;
+  const capturaMedia = (inst.justicia + inst.medios + inst.admin) / 3;
+  const colCapt = capturaMedia > 0.7 ? 'var(--bad)' : capturaMedia > 0.4 ? 'var(--warn)' : 'var(--ok)';
+  // Política migratoria media
+  let polMig = 0, n = 0;
+  for (const id of g.coalicion) {
+    const p = run.partidos.find(x => x.id === id);
+    if (p) { polMig += p.politicaMigratoria; n++; }
+  }
+  polMig = n > 0 ? polMig / n : 0;
+  const descMig = polMig > 0.3 ? 'abierta' : polMig < -0.3 ? 'restrictiva' : 'neutra';
+  el.innerHTML = `
+    <div class="coalicion">Coalición: ${coalicion}</div>
+    <div style="margin-top:6px;font-size:11px;color:var(--apagado);">
+      Desde T${g.turnoInicio} · Legitimidad: <strong>${fmt(g.legitimidad, 2)}</strong>
+    </div>
+    <div style="margin-top:6px;font-size:11px;">
+      Captura institucional: <strong style="color:${colCapt}">${pct(capturaMedia)}</strong>
+    </div>
+    <div style="font-size:10px;color:var(--apagado);margin-top:2px;font-family:ui-monospace,monospace;">
+      Justicia ${fmt(inst.justicia, 2)} · Medios ${fmt(inst.medios, 2)} · Admin ${fmt(inst.admin, 2)}
+    </div>
+    <div style="margin-top:6px;font-size:11px;">
+      Política migratoria: <strong style="color:var(--migr)">${descMig}</strong>
+    </div>
+  `;
+}
+
+function renderActores(run, params) {
+  const el = document.getElementById('actores');
+  const locales = Object.values(run.ccaas).filter(c => c.actorLocal);
+  const enRiesgo = Object.values(run.ccaas)
+    .filter(c => !c.actorLocal && c.coherenciaBaja > 0);
+  let html = '';
+  if (run.actoresGlobales.length > 0) {
+    html += `<div style="color:#c084fc;font-weight:600;margin-bottom:6px;padding:8px;
+      background:rgba(192,132,252,0.1);border-radius:4px;border-left:3px solid #c084fc;">
+      ◆◆ Actor GLOBAL activo</div>`;
+  } else {
+    html += `<div style="color:var(--apagado);margin-bottom:6px;font-size:11px;">
+      Sin actor global · ${locales.length}/${params.ccaaParaGlobal} CCAA con actor local
+    </div>`;
+  }
+  if (locales.length) {
+    html += `<div style="color:#c084fc;font-size:11px;margin:8px 0 4px;">
+      Locales (${locales.length}):</div>`;
+    for (const c of locales) {
+      html += `<div style="font-size:11px;color:#a8b2c0;padding:2px 6px;">
+        · <strong>${c.actorLocal.nombre}</strong> en ${c.nombre}
+        <span style="color:#556;">(${c.actorLocal.tipo}, T${c.turnoEmergencia})</span>
+      </div>`;
+    }
+  }
+  if (enRiesgo.length) {
+    html += `<div style="color:var(--warn);font-size:11px;margin:8px 0 4px;">En riesgo:</div>`;
+    for (const c of enRiesgo) {
+      html += `<div style="font-size:11px;color:#a8b2c0;padding:2px 6px;">
+        · ${c.nombre} <span style="color:#556;">${c.coherenciaBaja}/${params.turnosMinimosActor}</span>
+      </div>`;
+    }
+  }
+  el.innerHTML = html;
+}
+
+function renderFlujos(run) {
+  const el = document.getElementById('flujos-migratorios');
+  const flujos = run.flujosRecientes || [];
+  if (!flujos.length) {
+    el.innerHTML = '<div style="color:var(--apagado);font-size:12px;">Sin flujos recientes.</div>';
+    return;
+  }
+  let html = '<div class="flujo-lista">';
+  for (const f of flujos) {
+    const desde = run.ccaas[f.desde];
+    const hacia = run.ccaas[f.hacia];
+    html += `<div class="flujo-item">
+      <span class="ccaa">${desde.nombre}</span>
+      <span class="num">-${fmt(f.cantidad, 1)}k</span>
+      <span class="ccaa">→ ${hacia.nombre}</span>
+      <span class="num">+${fmt(f.cantidad, 1)}k</span>
+    </div>`;
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function renderLog(run) {
+  const el = document.getElementById('log');
+  const count = document.getElementById('log-count');
+  const items = run.log.slice(-40).reverse();
+  count.textContent = `${run.log.length} entradas`;
+  el.innerHTML = items.map(l => {
+    const cat = l.categoria || '';
+    return `<p class="${cat}"><span class="t">T${String(l.turno).padStart(3)}</span>${l.detalle}</p>`;
+  }).join('');
+}
+
+function renderHUD(run) {
+  const ccaas = Object.values(run.ccaas);
+  const avg = (fn) => ccaas.reduce((s, c) => s + fn(c), 0) / ccaas.length;
+  const cohMedia = avg(c => coherenciaCCAA(c).total);
+  const tempMedia = avg(c => c.capas.gaia.temp);
+  const pobMedia = avg(c => c.poblacion);
+  const actores = ccaas.filter(c => c.actorLocal).length + run.actoresGlobales.length;
+  document.getElementById('hud-turno').textContent = run.turno;
+  document.getElementById('hud-elec').textContent = `${run.relojElectoral}/${PRESETS[run.preset].relojElectoral}`;
+  document.getElementById('hud-migr').textContent = `${run.relojMigratorio}/${PRESETS[run.preset].relojMigratorio}`;
+  document.getElementById('hud-eco').textContent = `${run.relojEcologico}/${PRESETS[run.preset].relojEcologico}`;
+  document.getElementById('hud-coh').textContent = fmt(cohMedia, 3);
+  document.getElementById('hud-temp').textContent = fmt(tempMedia, 2) + '°';
+  document.getElementById('hud-pob').textContent = fmt(pobMedia, 0);
+  document.getElementById('hud-actores').textContent = actores;
+  document.getElementById('hud-coh').style.color =
+    cohMedia > 0.3 ? 'var(--ok)' : cohMedia > 0.1 ? 'var(--warn)' : 'var(--bad)';
+  document.getElementById('hud-temp').style.color =
+    tempMedia < 1.5 ? 'var(--ok)' : tempMedia < 2.5 ? 'var(--warn)' : 'var(--bad)';
+}
+
+/* ============================================================================
+   SECCIÓN 15 · CONTROLES
+   ============================================================================ */
+function initControles() {
+  const presetsEl = document.getElementById('presets');
+  for (const key in PRESETS) {
+    const b = document.createElement('button');
+    b.textContent = PRESETS[key].nombre;
+    b.dataset.preset = key;
+    if (key === 'C') b.classList.add('activo');
+    b.onclick = () => {
+      presetsEl.querySelectorAll('button').forEach(x => x.classList.remove('activo'));
+      b.classList.add('activo');
+      Estado.setPreset(key);
+    };
+    presetsEl.appendChild(b);
+  }
+  document.getElementById('btn-simple').onclick = () => {
+    document.getElementById('btn-simple').classList.add('activo');
+    document.getElementById('btn-experto').classList.remove('activo');
+    document.getElementById('panel-experto').open = false;
+    Estado.setModo('simple');
+  };
+  document.getElementById('btn-experto').onclick = () => {
+    document.getElementById('btn-experto').classList.add('activo');
+    document.getElementById('btn-simple').classList.remove('activo');
+    document.getElementById('panel-experto').open = true;
+    Estado.setModo('experto');
+  };
+
+  const slidersSimples = [
+    { k:'velocidadGaia', label:'Velocidad Gaia', min:0, max:1.5, step:0.05,
+      explica:'Cuánto se mueve la temperatura por turno.' },
+    { k:'velocidadEco', label:'Velocidad Eco', min:0, max:1.5, step:0.05,
+      explica:'Cuánto se extraen recursos y crece el capital.' },
+    { k:'velocidadSubj', label:'Velocidad Subj', min:0, max:1.5, step:0.05,
+      explica:'Cuánto cambian burnout y confianza.' },
+    { k:'pesoEstadoVoto', label:'Peso estado voto', min:0, max:1, step:0.05,
+      explica:'Cuánto pesa el estado real al votar.' },
+    { k:'pesoMemoria', label:'Peso memoria voto', min:0, max:1, step:0.05,
+      explica:'Cuánto pesa la gratitud/decepción acumulada.' },
+    { k:'pesoIdentidad', label:'Peso identidad voto', min:0, max:0.5, step:0.05,
+      explica:'Cuánto pesa la identidad periférica (partidos territoriales).' },
+    { k:'migracionActiva', label:'Migración activa', min:0, max:1, step:1,
+      explica:'0 = off · 1 = on.', bool:true },
+    { k:'velocidadMigracion', label:'Velocidad migración', min:0, max:0.05, step:0.005,
+      explica:'Cuánto flujo migratorio por turno (relativo a diferencias de atractivo).' },
+    { k:'relojElectoral', label:'Ciclo electoral', min:1, max:10, step:1,
+      explica:'Turnos entre elecciones.' },
+    { k:'relojMigratorio', label:'Ciclo migratorio', min:1, max:10, step:1,
+      explica:'Turnos entre cálculos de migración.' },
+  ];
+  renderSliders('controles-simples', slidersSimples);
+  renderSliders('controles-migracion', [
+    { k:'retardoMigratorio', label:'Retardo migratorio', min:0, max:10, step:1,
+      explica:'Turnos de retardo entre cambio de atractivo y flujo real.' },
+    { k:'velocidadMigracion', label:'Velocidad migración', min:0, max:0.05, step:0.005,
+      explica:'Cuánto flujo por turno.' },
+    { k:'migracionActiva', label:'Migración activa', min:0, max:1, step:1,
+      explica:'0 = off · 1 = on.', bool:true },
+  ]);
+  renderSliders('controles-tejido', [
+    { k:'velocidadTejido', label:'Velocidad tejido', min:0, max:0.01, step:0.001,
+      explica:'Cuánto cambia el tejido productivo por turno.' },
+  ]);
+  renderSliders('controles-recursos', [
+    { k:'tasaRegeneracionBase', label:'Tasa regeneración base', min:0.01, max:0.15, step:0.005,
+      explica:'Cuánto se regeneran los renovables por turno (× salud ecosistémica).' },
+    { k:'factorExtraccion', label:'Factor extracción', min:0.02, max:0.3, step:0.01,
+      explica:'Cuánto capital se extrae de recursos por unidad.' },
+    { k:'emisionesBase', label:'Emisiones base', min:0, max:2, step:0.1,
+      explica:'Emisiones por turno independientes del capital.' },
+    { k:'absorcionCo2', label:'Absorción CO₂', min:0.005, max:0.05, step:0.005,
+      explica:'Cuánto CO₂ se convierte en forzamiento térmico.' },
+  ]);
+  renderSliders('controles-voto', [
+    { k:'pesoPrograma', label:'Peso programa', min:0, max:1, step:0.05,
+      explica:'Cuánto pesa la identidad del partido.' },
+    { k:'fuerzaRuido', label:'Fuerza ruido', min:0, max:3, step:0.1,
+      explica:'Cuánta variabilidad determinista hay en el voto.' },
+    { k:'memoriaDecay', label:'Decaimiento memoria', min:0.5, max:1, step:0.05,
+      explica:'Cuánto se olvida la memoria electoral cada turno.' },
+    { k:'umbralDHondt', label:'Umbral D\'Hondt', min:0, max:0.1, step:0.005,
+      explica:'Porcentaje mínimo para entrar en reparto.' },
+  ]);
+  renderSliders('controles-emerg', [
+    { k:'umbralCoherenciaActor', label:'Umbral coherencia', min:0.02, max:0.5, step:0.01,
+      explica:'Por debajo de esto, cuenta como coherencia baja.' },
+    { k:'turnosMinimosActor', label:'Turnos mínimos', min:2, max:20, step:1,
+      explica:'Turnos seguidos bajo umbral antes de emerger.' },
+    { k:'ccaaParaGlobal', label:'CCAA para global', min:2, max:10, step:1,
+      explica:'Cuántas CCAA con actor local antes de emerger uno global.' },
+    { k:'actoresEmergentes', label:'Actores activos', min:0, max:1, step:1,
+      explica:'0 = off · 1 = on.', bool:true },
+  ]);
+  renderSliders('controles-instit', [
+    { k:'capturaInstitucionalPorTurno', label:'Captura por turno', min:0, max:0.02, step:0.001,
+      explica:'Cuánto crece la captura institucional cada turno de gobierno.' },
+  ]);
+
+  document.getElementById('pert-eco').onclick = () => Estado.perturbar('shock_eco');
+  document.getElementById('pert-clima').onclick = () => Estado.perturbar('shock_clima');
+  document.getElementById('pert-capt').onclick = () => Estado.perturbar('captura');
+  document.getElementById('pert-despertar').onclick = () => Estado.perturbar('despertar');
+  document.getElementById('pert-nuclear').onclick = () => Estado.perturbar('nuclear');
+  document.getElementById('pert-ia').onclick = () => Estado.perturbar('ia');
+
+  document.getElementById('btn-turno').onclick = () => Estado.step();
+  document.getElementById('btn-10').onclick = () => Estado.stepN(10);
+  document.getElementById('btn-50').onclick = () => Estado.stepN(50);
+  document.getElementById('btn-reset').onclick = () => Estado.reset();
+  document.getElementById('btn-tests').onclick = runTests;
+
+  BUS.on('reset', ({ params }) => {
+    syncSliders('controles-simples', slidersSimples, params);
+    syncSliders('controles-migracion', [
+      { k:'retardoMigratorio' }, { k:'velocidadMigracion' }, { k:'migracionActiva', bool:true },
+    ], params);
+    syncSliders('controles-tejido', [{ k:'velocidadTejido' }], params);
+    syncSliders('controles-recursos', [
+      { k:'tasaRegeneracionBase' }, { k:'factorExtraccion' },
+      { k:'emisionesBase' }, { k:'absorcionCo2' },
+    ], params);
+    syncSliders('controles-voto', [
+      { k:'pesoPrograma' }, { k:'fuerzaRuido' },
+      { k:'memoriaDecay' }, { k:'umbralDHondt' },
+    ], params);
+    syncSliders('controles-emerg', [
+      { k:'umbralCoherenciaActor' }, { k:'turnosMinimosActor' },
+      { k:'ccaaParaGlobal' }, { k:'actoresEmergentes', bool:true },
+    ], params);
+    syncSliders('controles-instit', [{ k:'capturaInstitucionalPorTurno' }], params);
+  });
+}
+
+function renderSliders(containerId, sliders) {
+  const cont = document.getElementById(containerId);
+  cont.innerHTML = '';
+  for (const s of sliders) {
+    const div = document.createElement('div');
+    div.className = 'ctrl';
+    const ini = Estado.params[s.k];
+    if (s.bool) {
+      div.innerHTML = `
+        <label style="cursor:pointer;">
+          <span>${s.label}</span>
+          <input type="checkbox" data-k="${s.k}" ${ini ? 'checked' : ''}>
+        </label>
+        <div class="explica">${s.explica}</div>
+      `;
+      cont.appendChild(div);
+      div.querySelector('input').onchange = (e) => Estado.setParam(s.k, e.target.checked);
+    } else {
+      div.innerHTML = `
+        <label><span>${s.label}</span><span data-val>${s.step < 1 ? fmt(ini, 3) : ini}</span></label>
+        <input type="range" min="${s.min}" max="${s.max}" step="${s.step}" value="${ini}" data-k="${s.k}">
+        <div class="explica">${s.explica}</div>
+      `;
+      cont.appendChild(div);
+      const inp = div.querySelector('input');
+      const val = div.querySelector('[data-val]');
+      inp.oninput = () => {
+        const v = parseFloat(inp.value);
+        val.textContent = s.step < 1 ? fmt(v, 3) : v;
+        Estado.setParam(s.k, v);
+      };
+    }
+  }
+}
+
+function syncSliders(containerId, sliders, params) {
+  const cont = document.getElementById(containerId);
+  for (const s of sliders) {
+    const inp = cont.querySelector(`input[data-k="${s.k}"]`);
+    if (!inp) continue;
+    if (s.bool) inp.checked = !!params[s.k];
+    else {
+      inp.value = params[s.k];
+      const val = inp.parentElement.querySelector('[data-val]');
+      if (val) val.textContent = s.step < 1 ? fmt(params[s.k], 3) : params[s.k];
+    }
+  }
+}
+
+/* ============================================================================
+   SECCIÓN 16 · RENDER GLOBAL
+   ============================================================================ */
+function renderTodo({ run, params, ccaaActiva }) {
+  Mapa.render(run, ccaaActiva);
+  DetalleCCAA.render(run, ccaaActiva, params);
+  GraficaHistorial.render(run);
+  TablaCCAA.render(run, ccaaActiva);
+  Hemiciclo.render(run);
+  renderGobierno(run);
+  renderActores(run, params);
+  renderFlujos(run);
+  renderLog(run);
+  renderHUD(run);
+  document.getElementById('preset-desc').textContent = PRESETS[run.preset].descripcion;
+}
+
+/* ============================================================================
+   SECCIÓN 17 · TESTS
+   ============================================================================ */
+function runTests() {
+  const out = document.getElementById('tests-out');
+  out.classList.add('visible');
+  out.innerHTML = '';
+  let ok = 0, fail = 0;
+  const log = (msg, c = '', detalle = '') => {
+    const d = document.createElement('div');
+    if (c) d.className = c;
+    d.innerHTML = msg + (detalle ? `<span class="test-detalle">${detalle}</span>` : '');
+    out.appendChild(d);
+  };
+  const assert = (cond, msg, detalle = '') => {
+    if (cond) { log('✓ ' + msg, 'ok', detalle); ok++; }
+    else { log('✗ ' + msg, 'fail', detalle); fail++; }
+  };
+
+  log('═══ Tests Simulador C · Fase 2 ═══');
+
+  log('');
+  log('— Utilidades —');
+  assert(umbral(1, 2, 0.2) === 0, 'umbral bajo → 0');
+  assert(umbral(3, 2, 0.2) === 1, 'umbral alto → 1');
+  assert(clamp(5, 0, 1) === 1, 'clamp funciona');
+
+  log('');
+  log('— D\'Hondt —');
+  {
+    const d = dhondt({ A: 0.5, B: 0.3, C: 0.2 }, 5);
+    assert(Object.values(d).reduce((a, b) => a + b, 0) === 5, 'D\'Hondt reparte 5');
+    const d2 = dhondt({ A: 0.4, B: 0.3, C: 0.15, D: 0.1, E: 0.05 }, 20);
+    assert(Object.values(d2).reduce((a, b) => a + b, 0) === 20, 'D\'Hondt suma 20');
+  }
+
+  log('');
+  log('— Estado inicial —');
+  Estado.inicializar();
+  {
+    const r = Estado.run;
+    assert(Object.keys(r.ccaas).length === 17, '17 CCAA');
+    assert(r.partidos.length === 9, '9 partidos (4 base + 5 territoriales)',
+      `(${r.partidos.length})`);
+    const sumaEsc = Object.values(r.ccaas).reduce((s, c) => s + c.escanos, 0);
+    assert(sumaEsc === 350, `escaños suman 350`, `(${sumaEsc})`);
+    const pobInicial = Object.values(r.ccaas).reduce((s, c) => s + c.poblacion, 0);
+    assert(pobInicial > 40000 && pobInicial < 50000, 'población total razonable',
+      `(${fmt(pobInicial, 0)}k)`);
+  }
+
+  log('');
+  log('— Coherencia —');
+  {
+    const r = Estado.run;
+    for (const c of Object.values(r.ccaas)) {
+      const coh = coherenciaCCAA(c);
+      assert(coh.total >= 0 && coh.total <= 1, `coherencia [0,1] en ${c.nombre}`,
+        `= ${fmt(coh.total, 3)}`);
+    }
+  }
+
+  log('');
+  log('— Recursos —');
+  {
+    Estado.inicializar();
+    const r = Estado.run;
+    const c = r.ccaas.andalucia;
+    const noRenovInicial = c.recursos.noRenovables.stock;
+    for (let i = 0; i < 5; i++) stepCapas(c, Estado.params, r);
+    assert(c.recursos.noRenovables.stock <= noRenovInicial,
+      'no renovables no se regeneran',
+      `${fmt(noRenovInicial, 0)} → ${fmt(c.recursos.noRenovables.stock, 0)}`);
+    assert(c.recursos.renovables.stock <= c.recursos.renovables.capacidad + 1,
+      'renovables no superan capacidad');
+  }
+
+  log('');
+  log('— Migración —');
+  {
+    Estado.setPreset('C');
+    const r = Estado.run;
+    const params = { ...Estado.params };
+    // Crear diferencial de atractivo: Madrid rica, Extremadura pobre.
+    r.ccaas.madrid.capas.eco.capital = 200;
+    r.ccaas.extremadura.capas.eco.capital = 2;
+    r.ccaas.madrid.capas.subj.confianza = 90;
+    r.ccaas.extremadura.capas.subj.confianza = 20;
+    const pobExtremInicial = r.ccaas.extremadura.poblacion;
+    const pobMadridInicial = r.ccaas.madrid.poblacion;
+    // Avanzar varios ciclos migratorios para que el atractivo previo se actualice.
+    for (let i = 0; i < 15; i++) {
+      // Recalcular atractivo pero sin machacar deltas.
+      for (const c of Object.values(r.ccaas)) {
+        c.atractivoPrevio = calcularAtractivo(c, params);
+      }
+      calcularMigracion(r, params);
+    }
+    assert(r.ccaas.extremadura.poblacion < pobExtremInicial,
+      'Extremadura pierde población (menos atractiva)',
+      `${fmt(pobExtremInicial, 0)} → ${fmt(r.ccaas.extremadura.poblacion, 0)}`);
+    assert(r.ccaas.madrid.poblacion > pobMadridInicial,
+      'Madrid gana población (más atractiva)',
+      `${fmt(pobMadridInicial, 0)} → ${fmt(r.ccaas.madrid.poblacion, 0)}`);
+    // Conservación: suma total constante.
+    const total = Object.values(r.ccaas).reduce((s, c) => s + c.poblacion, 0);
+    // (con la salvedad de que clamp a 50 puede alterar mínimamente)
+    assert(total > 40000 && total < 55000, 'población total conservada',
+      `(${fmt(total, 0)}k)`);
+  }
+
+  log('');
+  log('— Tejido —');
+  {
+    Estado.inicializar();
+    const r = Estado.run;
+    const c = r.ccaas.madrid;
+    const industriInicial = c.tejido.industria;
+    // Correr con capital alto.
+    c.capas.eco.capital = 100;
+    for (let i = 0; i < 20; i++) stepCapas(c, Estado.params, r);
+    assert(c.tejido.industria > industriInicial,
+      'industria crece con capital alto',
+      `${fmt(industriInicial, 3)} → ${fmt(c.tejido.industria, 3)}`);
+    const suma = c.tejido.agro + c.tejido.industria + c.tejido.servicios + c.tejido.extractivo;
+    assert(Math.abs(suma - 1) < 0.01, 'tejido normalizado (~1)', `${fmt(suma, 3)}`);
+  }
+
+  log('');
+  log('— Partidos territoriales —');
+  {
+    Estado.inicializar();
+    const r = Estado.run;
+    const params = { ...Estado.params };
+    // Avanzar elecciones.
+    for (let i = 0; i < 10; i++) stepMotor(r, params);
+    // Verificar que en Cataluña aparecen ERC o Junts en el voto.
+    const c = r.ccaas.cataluna;
+    const tieneERC = c.ultimoVoto.erc > 0;
+    const tieneJunts = c.ultimoVoto.junts > 0;
+    assert(tieneERC && tieneJunts, 'ERC y Junts aparecen en Cataluña');
+    // Verificar que en Madrid no aparecen (no son territoriales de Madrid).
+    const mad = r.ccaas.madrid;
+    assert(!mad.ultimoVoto.erc && !mad.ultimoVoto.junts,
+      'ERC y Junts no aparecen en Madrid');
+  }
+
+  log('');
+  log('— Actores emergentes —');
+  {
+    Estado.setPreset('C');
+    const r = Estado.run;
+    const params = { ...Estado.params };
+    params.velocidadGaia = 1.5;
+    params.velocidadEco = 1.5;
+    params.velocidadSubj = 1.5;
+    for (const c of Object.values(r.ccaas)) {
+      c.recursos.renovables.stock = 100;
+      c.recursos.noRenovables.stock = 50;
+      c.capas.eco.capital = 3;
+    }
+    for (let i = 0; i < 40; i++) stepMotor(r, params);
+    const conActor = Object.values(r.ccaas).filter(c => c.actorLocal).length;
+    assert(conActor > 0, 'emergen actores bajo estrés', `(${conActor} locales)`);
+  }
+
+  log('');
+  log('— Desaparición de actores —');
+  {
+    Estado.setPreset('C');
+    const r = Estado.run;
+    const params = { ...Estado.params };
+    // Crear actor manualmente.
+    const c = r.ccaas.madrid;
+    c.actorLocal = {
+      id: 'emerg_madrid', nombre: 'Test', color: '#c084fc',
+      programa: { gaia:0.5, eco:-0.5, capt:-0.5, subj:0.5 }, base: 0.15,
+      tipo: 'populista_izq',
+    };
+    // Cumplir condición de desaparición.
+    c.capas.subj.burnout = 10;
+    c.capas.eco.capital = 60;
+    checkActores(r, params);
+    assert(c.actorLocal === null, 'actor desaparece cuando se cumple condición');
+  }
+
+  log('');
+  log('— Memoria electoral —');
+  {
+    Estado.setPreset('C');
+    const r = Estado.run;
+    const params = { ...Estado.params };
+    for (let i = 0; i < 12; i++) stepMotor(r, params);
+    const c = r.ccaas.madrid;
+    const memNoCero = Object.values(c.memoria).some(v => Math.abs(v) > 0.01);
+    assert(memNoCero, 'memoria electoral se actualiza');
+  }
+
+  log('');
+  log('— Simulación completa —');
+  {
+    Estado.setPreset('C');
+    const r = Estado.run;
+    const params = { ...Estado.params };
+    for (let i = 0; i < 50; i++) stepMotor(r, params);
+    assert(r.turno === 50, '50 turnos');
+    const elec = r.log.filter(l => l.tipo === 'elecciones');
+    assert(elec.length === 12, '12 elecciones (cada 4 turnos)', `(${elec.length})`);
+    const migr = r.log.filter(l => l.tipo === 'migracion');
+    assert(migr.length > 0, 'migración ocurre', `(${migr.length} ciclos)`);
+    // Voto normalizado
+    const c = r.ccaas.madrid;
+    const sum = Object.values(c.ultimoVoto).reduce((a, b) => a + b, 0);
+    assert(Math.abs(sum - 1) < 0.01, 'voto normalizado', `Σ = ${fmt(sum, 4)}`);
+  }
+
+  log('');
+  log('— Robustez —');
+  {
+    Estado.setPreset('C');
+    const r = Estado.run;
+    const params = { ...Estado.params };
+    params.velocidadGaia = 10;
+    params.velocidadEco = 10;
+    params.velocidadSubj = 10;
+    params.velocidadMigracion = 1;
+    params.pesoEstadoVoto = 5;
+    params.pesoPrograma = 5;
+    try {
+      for (let i = 0; i < 15; i++) stepMotor(r, params);
+      assert(true, 'parámetros extremos no rompen el motor');
+    } catch (e) {
+      assert(false, 'parámetros extremos rompen el motor', e.message);
+    }
+  }
+
+  log('');
+  log(`═══ ${ok} OK · ${fail} FAIL ═══`);
+}
+
+/* ============================================================================
+   SECCIÓN 18 · INIT
+   ============================================================================ */
+BUS.on('change', renderTodo);
+BUS.on('reset', ({ run }) => renderTodo({
+  run, params: Estado.params, ccaaActiva: null,
+}));
+initControles();
+Estado.inicializar();
+renderTodo({
+  run: Estado.run, params: Estado.params, ccaaActiva: null,
+});
+</script>
+</body>
+</html>
